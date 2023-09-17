@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using System;
 
 namespace MonoModus;
 
@@ -79,7 +80,7 @@ class Squares : DrawableGameComponent
             int index = i * 6;
             _colors[i] = Color.White;
             _scales[i] = ((float)((i % _width) + 1) / (float)_width);
-            _rotations[i] = 0f;
+            _rotations[i] = (((float)i) / ((float)_totalSquares)) * (float)Math.PI;
             _vertices[vertex + 0].TextureCoordinate = new Vector2(0f, 0f);
             _vertices[vertex + 1].TextureCoordinate = new Vector2(1f, 0f);
             _vertices[vertex + 2].TextureCoordinate = new Vector2(0f, 1f);
@@ -119,14 +120,19 @@ class Squares : DrawableGameComponent
             float centerX = _squareSize * (float)x + _xOffset;
             float centerY = _squareSize * (float)y + _yOffset;
             float offset = _squareHalf * _scales[i];
+            (double sinD, double cosD) = Math.SinCos((double)_rotations[i]);
+            float sin = (float)sinD;
+            float cos = (float)cosD;
+            float offsetX = (cos * offset) - (sin * offset);
+            float offsetY = (cos * offset) + (sin * offset);
             _vertices[vertex + 0].Color = _colors[i];
             _vertices[vertex + 1].Color = _colors[i];
             _vertices[vertex + 2].Color = _colors[i];
             _vertices[vertex + 3].Color = _colors[i];
-            _vertices[vertex + 0].Position = new Vector3(centerX - offset, centerY - offset, 0f);
-            _vertices[vertex + 1].Position = new Vector3(centerX - offset, centerY + offset, 0f);
-            _vertices[vertex + 2].Position = new Vector3(centerX + offset, centerY - offset, 0f);
-            _vertices[vertex + 3].Position = new Vector3(centerX + offset, centerY + offset, 0f);
+            _vertices[vertex + 0].Position = new Vector3(centerX - offsetX, centerY - offsetY, 0f);
+            _vertices[vertex + 1].Position = new Vector3(centerX - offsetY, centerY + offsetX, 0f);
+            _vertices[vertex + 2].Position = new Vector3(centerX + offsetY, centerY - offsetX, 0f);
+            _vertices[vertex + 3].Position = new Vector3(centerX + offsetX, centerY + offsetY, 0f);
         }
 
         GraphicsDevice.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, _vertices, 0, _totalVertices, _indices, 0, _totalSquares * 2);
