@@ -14,9 +14,14 @@ class Squares : DrawableGameComponent
     private short[] _indices;
     private int _scale; // the smaller of our width-or-height
     private int _width, _height, _totalSquares, _totalVertices, _totalIndices;
-    private int _xOffset, _yOffset;
+    private float _xOffset, _yOffset;
     private int _squareSize;
+    private float _squareHalf;
     private Matrix _viewAdapted;
+
+    private Color[] _colors;
+    private float[] _scales;
+    private float[] _rotations;
 
     public Squares(Game game, int scale)
             : base(game)
@@ -59,23 +64,26 @@ class Squares : DrawableGameComponent
         _totalVertices = _totalSquares * 4;
         _totalIndices = _totalSquares * 6;
 
-        _xOffset = (screenWidth - (_width * _squareSize)) / 2;
-        _yOffset = (screenHeight - (_height * _squareSize)) / 2;
+        _xOffset = (float)((screenWidth - (_width * _squareSize)) + _squareSize) / 2;
+        _yOffset = (float)((screenHeight - (_height * _squareSize)) + _squareSize) / 2;
+        _squareHalf = (float)_squareSize / 2;
 
         _vertices = new VertexPositionColorTexture[_totalVertices];
         _indices = new short[_totalIndices];
+        _colors = new Color[_totalSquares];
+        _rotations = new float[_totalSquares];
+        _scales = new float[_totalSquares];
         for (int i = 0; i < _totalSquares; i++)
         {
             int vertex = i * 4;
             int index = i * 6;
+            _colors[i] = Color.White;
+            _scales[i] = ((float)((i % _width) + 1) / (float)_width);
+            _rotations[i] = 0f;
             _vertices[vertex + 0].TextureCoordinate = new Vector2(0f, 0f);
             _vertices[vertex + 1].TextureCoordinate = new Vector2(1f, 0f);
             _vertices[vertex + 2].TextureCoordinate = new Vector2(0f, 1f);
             _vertices[vertex + 3].TextureCoordinate = new Vector2(1f, 1f);
-            _vertices[vertex + 0].Color = Color.White;
-            _vertices[vertex + 1].Color = Color.White;
-            _vertices[vertex + 2].Color = Color.White;
-            _vertices[vertex + 3].Color = Color.White;
             _indices[index + 0] = (short)(vertex + 0);
             _indices[index + 1] = (short)(vertex + 1);
             _indices[index + 2] = (short)(vertex + 2);
@@ -83,20 +91,20 @@ class Squares : DrawableGameComponent
             _indices[index + 4] = (short)(vertex + 1);
             _indices[index + 5] = (short)(vertex + 3);
         }
+        Matrix viewTranslate = Matrix.CreateTranslation(-1f, -1f, 0f);
+        Matrix viewScale = Matrix.CreateScale(2f / (float)screenWidth, 2f / (float)screenHeight, 1f);
+        _viewAdapted = Matrix.Multiply(viewScale, viewTranslate);
 
         _squareTx = Game.Content.Load<Texture2D>("Textures/square");
         _effect = Game.Content.Load<Effect>("Effects/effects");
-        Matrix viewTranslate = Matrix.CreateTranslation(-1f, -1f, 0f);
+        _effect.CurrentTechnique = _effect.Techniques["Okay"];
+        _effect.Parameters["xTexture"].SetValue(_squareTx);
+        _effect.Parameters["xTranslate"].SetValue(_viewAdapted);
 
-        Matrix viewScale = Matrix.CreateScale(2f / (float)screenWidth, 2f / (float)screenHeight, 1f);
-        _viewAdapted = Matrix.Multiply(viewScale, viewTranslate);
     }
 
     public override void Draw(GameTime gameTime)
     {
-        _effect.CurrentTechnique = _effect.Techniques["Okay"];
-        _effect.Parameters["xTexture"].SetValue(_squareTx);
-        _effect.Parameters["xTranslate"].SetValue(_viewAdapted);
         foreach (EffectPass pass in _effect.CurrentTechnique.Passes)
         {
             pass.Apply();
@@ -106,13 +114,19 @@ class Squares : DrawableGameComponent
         for (int i = 0; i < _totalSquares; i++)
         {
             int vertex = i * 4;
-            float x = ((i % _width) * _squareSize) + _xOffset;
-            float y = ((i / _width) * _squareSize) + _yOffset;
-            _vertices[vertex + 0].Position = new Vector3((x + 0), (y + 0), 0f);
-            _vertices[vertex + 1].Position = new Vector3((x + 0), (y + _squareSize), 0f);
-            _vertices[vertex + 2].Position = new Vector3((x + _squareSize), (y + 0), 0f);
-            _vertices[vertex + 3].Position = new Vector3((x + _squareSize), (y + _squareSize), 0f);
-
+            int x = (i % _width);
+            int y = (i / _width);
+            float centerX = _squareSize * (float)x + _xOffset;
+            float centerY = _squareSize * (float)y + _yOffset;
+            float offset = _squareHalf * _scales[i];
+            _vertices[vertex + 0].Color = _colors[i];
+            _vertices[vertex + 1].Color = _colors[i];
+            _vertices[vertex + 2].Color = _colors[i];
+            _vertices[vertex + 3].Color = _colors[i];
+            _vertices[vertex + 0].Position = new Vector3(centerX - offset, centerY - offset, 0f);
+            _vertices[vertex + 1].Position = new Vector3(centerX - offset, centerY + offset, 0f);
+            _vertices[vertex + 2].Position = new Vector3(centerX + offset, centerY - offset, 0f);
+            _vertices[vertex + 3].Position = new Vector3(centerX + offset, centerY + offset, 0f);
         }
 
         GraphicsDevice.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, _vertices, 0, _totalVertices, _indices, 0, _totalSquares * 2);
