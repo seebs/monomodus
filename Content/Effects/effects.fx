@@ -22,13 +22,13 @@ struct PixelToFrame
 
 Texture xTexture;
 sampler TextureSampler = sampler_state { texture = <xTexture>; magfilter = LINEAR; minfilter = LINEAR; mipfilter=LINEAR; AddressU = mirror; AddressV = mirror;};
-
+float4x4 xTranslate;
 
 // okay let's see
 VertexToPixel okayVS( float4 inPos : POSITION, float4 inColor: COLOR, float2 inTexCoords: TEXCOORD0)
 {
 	VertexToPixel Output = (VertexToPixel)0;
-	Output.Position = inPos;
+	Output.Position = mul(inPos, xTranslate);
 	Output.Color = inColor;
 	Output.TextureCoords = inTexCoords;
     
