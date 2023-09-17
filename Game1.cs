@@ -48,7 +48,7 @@ public class Game1 : Game
 
     protected override void Draw(GameTime gameTime)
     {
-        _effect.CurrentTechnique = _effect.Techniques["Okay"];
+        _effect.CurrentTechnique = _effect.Techniques["Tx"];
         _effect.Parameters["xTexture"].SetValue(_squareTx);
         foreach (EffectPass pass in _effect.CurrentTechnique.Passes)
         {

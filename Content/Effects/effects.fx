@@ -6,11 +6,17 @@
     #define PS_SHADERMODEL ps_4_0_level_9_1
 #endif
 
-struct VertexToPixel
+struct TxToPixel
 {
     float4 Position   	: POSITION;    
     float4 Color		: COLOR0;
     float2 TextureCoords: TEXCOORD1;
+};
+
+struct FlatToPixel
+{
+    float4 Position   	: POSITION;    
+    float4 Color		: COLOR0;
 };
 
 struct PixelToFrame
@@ -25,9 +31,9 @@ sampler TextureSampler = sampler_state { texture = <xTexture>; magfilter = LINEA
 float4x4 xTranslate;
 
 // okay let's see
-VertexToPixel okayVS( float4 inPos : POSITION, float4 inColor: COLOR, float2 inTexCoords: TEXCOORD0)
+TxToPixel TxVS( float4 inPos : POSITION, float4 inColor: COLOR, float2 inTexCoords: TEXCOORD0)
 {
-	VertexToPixel Output = (VertexToPixel)0;
+	TxToPixel Output = (TxToPixel)0;
 	Output.Position = mul(inPos, xTranslate);
 	Output.Color = inColor;
 	Output.TextureCoords = inTexCoords;
@@ -35,7 +41,7 @@ VertexToPixel okayVS( float4 inPos : POSITION, float4 inColor: COLOR, float2 inT
 	return Output;    
 }
 
-PixelToFrame okayPS(VertexToPixel PSIn) 
+PixelToFrame TxPS(TxToPixel PSIn) 
 {
 	PixelToFrame Output = (PixelToFrame)0;		
 	
@@ -44,11 +50,38 @@ PixelToFrame okayPS(VertexToPixel PSIn)
 	return Output;
 }
 
-technique Okay
+FlatToPixel FlatVS(float4 inPos : POSITION, float4 inColor: COLOR)
+{
+	FlatToPixel Output = (FlatToPixel)0;
+	Output.Position = mul(inPos, xTranslate);
+	Output.Color = inColor;
+    
+	return Output;    
+}
+
+PixelToFrame FlatPS(FlatToPixel PSIn) 
+{
+	PixelToFrame Output = (PixelToFrame)0;		
+	
+	Output.Color = PSIn.Color;
+
+	return Output;
+}
+
+technique Tx
 {
 	pass Pass0
 	{   
-		VertexShader = compile VS_SHADERMODEL okayVS();
-		PixelShader  = compile PS_SHADERMODEL okayPS();	
+		VertexShader = compile VS_SHADERMODEL TxVS();
+		PixelShader  = compile PS_SHADERMODEL TxPS();	
+	}
+}
+
+technique Flat
+{
+	pass Pass0
+	{   
+		VertexShader = compile VS_SHADERMODEL FlatVS();
+		PixelShader  = compile PS_SHADERMODEL FlatPS();	
 	}
 }

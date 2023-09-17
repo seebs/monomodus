@@ -12,7 +12,9 @@ class Squares : DrawableGameComponent
 
     private VertexPositionColorTexture[] _vertices;
     private Effect _effect;
-    private short[] _indices;
+    private IndexBuffer _indexBuffer;
+    private VertexBuffer _vertexBuffer;
+    private int[] _indices;
     private int _scale; // the smaller of our width-or-height
     private int _width, _height, _totalSquares, _totalVertices, _totalIndices;
     private float _xOffset, _yOffset;
@@ -53,15 +55,6 @@ class Squares : DrawableGameComponent
             _width = screenWidth / _squareSize;
         }
         _totalSquares = _width * _height;
-
-        // shrink to fit
-        while (_totalSquares > (32764 / 4))
-        {
-            _width--;
-            _squareSize = screenWidth / _width;
-            _height = screenHeight / _squareSize;
-            _totalSquares = _width * _height;
-        }
         _totalVertices = _totalSquares * 4;
         _totalIndices = _totalSquares * 6;
 
@@ -70,7 +63,7 @@ class Squares : DrawableGameComponent
         _squareHalf = (float)_squareSize / 2;
 
         _vertices = new VertexPositionColorTexture[_totalVertices];
-        _indices = new short[_totalIndices];
+        _indices = new int[_totalIndices];
         _colors = new Color[_totalSquares];
         _rotations = new float[_totalSquares];
         _scales = new float[_totalSquares];
@@ -85,33 +78,30 @@ class Squares : DrawableGameComponent
             _vertices[vertex + 1].TextureCoordinate = new Vector2(1f, 0f);
             _vertices[vertex + 2].TextureCoordinate = new Vector2(0f, 1f);
             _vertices[vertex + 3].TextureCoordinate = new Vector2(1f, 1f);
-            _indices[index + 0] = (short)(vertex + 0);
-            _indices[index + 1] = (short)(vertex + 1);
-            _indices[index + 2] = (short)(vertex + 2);
-            _indices[index + 3] = (short)(vertex + 2);
-            _indices[index + 4] = (short)(vertex + 1);
-            _indices[index + 5] = (short)(vertex + 3);
+            _indices[index + 0] = (vertex + 0);
+            _indices[index + 1] = (vertex + 1);
+            _indices[index + 2] = (vertex + 2);
+            _indices[index + 3] = (vertex + 2);
+            _indices[index + 4] = (vertex + 1);
+            _indices[index + 5] = (vertex + 3);
         }
+        _indexBuffer = new IndexBuffer(GraphicsDevice, IndexElementSize.ThirtyTwoBits, _totalIndices, BufferUsage.WriteOnly);
+        _indexBuffer.SetData(_indices);
+        GraphicsDevice.Indices = _indexBuffer;
+        _vertexBuffer = new VertexBuffer(GraphicsDevice, VertexPositionColorTexture.VertexDeclaration, _totalVertices, BufferUsage.WriteOnly);
         Matrix viewTranslate = Matrix.CreateTranslation(-1f, -1f, 0f);
         Matrix viewScale = Matrix.CreateScale(2f / (float)screenWidth, 2f / (float)screenHeight, 1f);
         _viewAdapted = Matrix.Multiply(viewScale, viewTranslate);
 
         _squareTx = Game.Content.Load<Texture2D>("Textures/square");
         _effect = Game.Content.Load<Effect>("Effects/effects");
-        _effect.CurrentTechnique = _effect.Techniques["Okay"];
+        _effect.CurrentTechnique = _effect.Techniques["Tx"];
         _effect.Parameters["xTexture"].SetValue(_squareTx);
         _effect.Parameters["xTranslate"].SetValue(_viewAdapted);
-
     }
 
-    public override void Draw(GameTime gameTime)
+    public override void Update(GameTime gameTime)
     {
-        foreach (EffectPass pass in _effect.CurrentTechnique.Passes)
-        {
-            pass.Apply();
-        }
-        GraphicsDevice.Clear(Color.Black);
-        GraphicsDevice.BlendState = BlendState.Additive;
         for (int i = 0; i < _totalSquares; i++)
         {
             int vertex = i * 4;
@@ -134,8 +124,20 @@ class Squares : DrawableGameComponent
             _vertices[vertex + 2].Position = new Vector3(centerX + offsetY, centerY - offsetX, 0f);
             _vertices[vertex + 3].Position = new Vector3(centerX + offsetX, centerY + offsetY, 0f);
         }
-
-        GraphicsDevice.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, _vertices, 0, _totalVertices, _indices, 0, _totalSquares * 2);
     }
 
+    public override void Draw(GameTime gameTime)
+    {
+        foreach (EffectPass pass in _effect.CurrentTechnique.Passes)
+        {
+            pass.Apply();
+        }
+        GraphicsDevice.Clear(Color.Black);
+        GraphicsDevice.BlendState = BlendState.Additive;
+        _vertexBuffer.SetData(_vertices);
+        GraphicsDevice.SetVertexBuffer(_vertexBuffer);
+        GraphicsDevice.Indices = _indexBuffer;
+
+        GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, _totalSquares * 2);
+    }
 }
