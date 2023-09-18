@@ -87,7 +87,6 @@ class Squares : DrawableGameComponent
         }
         _indexBuffer = new IndexBuffer(GraphicsDevice, IndexElementSize.ThirtyTwoBits, _totalIndices, BufferUsage.WriteOnly);
         _indexBuffer.SetData(_indices);
-        GraphicsDevice.Indices = _indexBuffer;
         _vertexBuffer = new VertexBuffer(GraphicsDevice, VertexPositionColorTexture.VertexDeclaration, _totalVertices, BufferUsage.WriteOnly);
         Matrix viewTranslate = Matrix.CreateTranslation(-1f, -1f, 0f);
         Matrix viewScale = Matrix.CreateScale(2f / (float)screenWidth, 2f / (float)screenHeight, 1f);
@@ -95,9 +94,6 @@ class Squares : DrawableGameComponent
 
         _squareTx = Game.Content.Load<Texture2D>("Textures/square");
         _effect = Game.Content.Load<Effect>("Effects/effects");
-        _effect.CurrentTechnique = _effect.Techniques["Tx"];
-        _effect.Parameters["xTexture"].SetValue(_squareTx);
-        _effect.Parameters["xTranslate"].SetValue(_viewAdapted);
     }
 
     public override void Update(GameTime gameTime)
@@ -128,11 +124,13 @@ class Squares : DrawableGameComponent
 
     public override void Draw(GameTime gameTime)
     {
+        _effect.CurrentTechnique = _effect.Techniques["Tx"];
+        _effect.Parameters["xTexture"].SetValue(_squareTx);
+        _effect.Parameters["xTranslate"].SetValue(_viewAdapted);
         foreach (EffectPass pass in _effect.CurrentTechnique.Passes)
         {
             pass.Apply();
         }
-        GraphicsDevice.Clear(Color.Black);
         GraphicsDevice.BlendState = BlendState.Additive;
         _vertexBuffer.SetData(_vertices);
         GraphicsDevice.SetVertexBuffer(_vertexBuffer);

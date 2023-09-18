@@ -14,13 +14,17 @@ public class Game1 : Game
 
     private Squares _squares;
 
+    private Polyline _polyline;
+
     public Game1()
     {
         _graphics = new GraphicsDeviceManager(this);
         Content.RootDirectory = "Content";
         IsMouseVisible = true;
         _squares = new Squares(this, 10);
+        _polyline = new Polyline(this, 6, 20);
         Components.Add(_squares);
+        Components.Add(_polyline);
     }
 
     protected override void Initialize()
@@ -48,12 +52,6 @@ public class Game1 : Game
 
     protected override void Draw(GameTime gameTime)
     {
-        _effect.CurrentTechnique = _effect.Techniques["Tx"];
-        _effect.Parameters["xTexture"].SetValue(_squareTx);
-        foreach (EffectPass pass in _effect.CurrentTechnique.Passes)
-        {
-            pass.Apply();
-        }
         GraphicsDevice.Clear(Color.Black);
 
         // TODO: Add your drawing code here
