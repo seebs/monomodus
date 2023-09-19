@@ -29,6 +29,7 @@ struct PixelToFrame
 Texture xTexture;
 sampler TextureSampler = sampler_state { texture = <xTexture>; magfilter = LINEAR; minfilter = LINEAR; mipfilter=LINEAR; AddressU = mirror; AddressV = mirror;};
 float4x4 xTranslate;
+float xAlpha; // global multiplier to apply to everything in this drawing path
 
 // okay let's see
 TxToPixel TxVS( float4 inPos : POSITION, float4 inColor: COLOR, float2 inTexCoords: TEXCOORD0)
@@ -45,7 +46,7 @@ PixelToFrame TxPS(TxToPixel PSIn)
 {
 	PixelToFrame Output = (PixelToFrame)0;		
 	
-	Output.Color = PSIn.Color * tex2D(TextureSampler, PSIn.TextureCoords);
+	Output.Color = PSIn.Color * tex2D(TextureSampler, PSIn.TextureCoords) * xAlpha;
 
 	return Output;
 }
@@ -63,7 +64,7 @@ PixelToFrame FlatPS(FlatToPixel PSIn)
 {
 	PixelToFrame Output = (PixelToFrame)0;		
 	
-	Output.Color = PSIn.Color;
+	Output.Color = PSIn.Color * xAlpha;
 
 	return Output;
 }

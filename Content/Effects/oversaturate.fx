@@ -48,7 +48,7 @@ PixelToFrame DesatPS(FlatToPixel PSIn)
 	float scale = max(max(c.r, c.g), max(c.b, 1));
     Output.Color.rgb = c.rgb / scale;
     if (scale > 1) {
-        Output.Color += scale / 10;
+        Output.Color += scale / 20;
     }
     Output.Color.a = c.a;
 

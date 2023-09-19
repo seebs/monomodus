@@ -23,8 +23,9 @@ public class Game1 : Game
         _graphics = new GraphicsDeviceManager(this);
         Content.RootDirectory = "Content";
         IsMouseVisible = true;
+        Palette rainbow = new Palette(10);
         _squares = new Squares(this, 10);
-        _polyline = new Polyline(this, 6, 20);
+        _polyline = new Polyline(this, 3, 2, 6, rainbow);
         _oversaturator = new Oversaturator(this);
         Components.Add(_squares);
         Components.Add(_polyline);

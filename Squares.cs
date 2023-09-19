@@ -127,6 +127,7 @@ class Squares : DrawableGameComponent
         _effect.CurrentTechnique = _effect.Techniques["Tx"];
         _effect.Parameters["xTexture"].SetValue(_squareTx);
         _effect.Parameters["xTranslate"].SetValue(_viewAdapted);
+        _effect.Parameters["xAlpha"].SetValue(1.0f);
         foreach (EffectPass pass in _effect.CurrentTechnique.Passes)
         {
             pass.Apply();

@@ -56,12 +56,14 @@ namespace MonoModus;
 class Polyline : DrawableGameComponent
 {
     private VertexPositionColor[] _vertices;
-    private VertexBuffer _vertexBuffer;
+    private int _trailIndex;
+    private VertexBuffer[] _vertexBuffers;
     private IndexBuffer _indexBuffer;
     private Effect _effect;
     private int[] _indices;
     private int _points; // number of points; segments will be one lower
     private int _segments;
+    private int _trails;
     private int _totalVertices, _totalIndices, _totalTriangles;
     private int _thickness;
     private float _thicknessHalf;
@@ -69,10 +71,11 @@ class Polyline : DrawableGameComponent
 
     private float _theta;
 
-    private Color[] _colors;
-    private Vector3[] _positions;
+    private int[] _colors;
+    private Vector2[] _positions;
+    private Palette _palette;
 
-    public Polyline(Game game, int points, int thickness)
+    public Polyline(Game game, int points, int thickness, int trails, Palette palette)
             : base(game)
     {
         _points = points;
@@ -80,6 +83,9 @@ class Polyline : DrawableGameComponent
         _thickness = thickness;
         _thicknessHalf = ((float)thickness) / 2;
         _theta = 0;
+        _palette = palette;
+        _trails = trails * 3;
+        _trailIndex = 0;
     }
 
     protected override void LoadContent()
@@ -90,8 +96,8 @@ class Polyline : DrawableGameComponent
         int screenWidth = pp.BackBufferWidth;
         int screenHeight = pp.BackBufferHeight;
 
-        _colors = new Color[_points];
-        _positions = new Vector3[_points];
+        _colors = new int[_points];
+        _positions = new Vector2[_points];
         _totalVertices = 6 * _segments;
         _totalIndices = 18 * _segments;
         _totalTriangles = 6 * _segments;
@@ -104,15 +110,12 @@ class Polyline : DrawableGameComponent
             int index = i * 18;
             float r = ((float)i / (float)(_segments + 1));
             float g = 1f - r;
-            _positions[i] = new Vector3(0, 0, 0);
-            _colors[i] = new Color(r, g, 128, 255);
+            _positions[i] = new Vector2(0, 0);
+            _colors[i] = i * 3;
         }
-        _positions[0] = new Vector3(0, 0, 0);
-        _positions[1] = new Vector3(100, 100, 0);
-        _positions[2] = new Vector3(200, 100, 0);
-        _positions[3] = new Vector3(200, 0, 0);
-        _positions[4] = new Vector3(100, 50, 0);
-        _positions[5] = new Vector3(50, 50, 0);
+        _positions[0] = new Vector2(0, 0);
+        _positions[1] = new Vector2(100, 100);
+        _positions[2] = new Vector2(200, 100);
 
         int pp3 = 0;
         int pp5 = 0;
@@ -154,8 +157,11 @@ class Polyline : DrawableGameComponent
 
         _indexBuffer = new IndexBuffer(GraphicsDevice, IndexElementSize.ThirtyTwoBits, _totalIndices, BufferUsage.WriteOnly);
         _indexBuffer.SetData(_indices);
-        _vertexBuffer = new VertexBuffer(GraphicsDevice, VertexPositionColor.VertexDeclaration, _totalVertices, BufferUsage.WriteOnly);
-
+        _vertexBuffers = new VertexBuffer[_trails];
+        for (int i = 0; i < _trails; i++)
+        {
+            _vertexBuffers[i] = new VertexBuffer(GraphicsDevice, VertexPositionColor.VertexDeclaration, _totalVertices, BufferUsage.WriteOnly);
+        }
         Matrix viewTranslate = Matrix.CreateTranslation(-1f, -1f, 0f);
         Matrix viewScale = Matrix.CreateScale(2f / (float)screenWidth, 2f / (float)screenHeight, 1f);
         _viewAdapted = Matrix.Multiply(viewScale, viewTranslate);
@@ -168,7 +174,7 @@ class Polyline : DrawableGameComponent
 
     public override void Update(GameTime gameTime)
     {
-        _theta += (float)gameTime.ElapsedGameTime.TotalSeconds;
+        _theta += 3 * (float)gameTime.ElapsedGameTime.TotalSeconds;
         (double s, double c) = Math.SinCos(_theta);
         _positions[1].X = 100 + 50 * (float)(c - s);
         _positions[1].Y = 100 + 50 * (float)(c + s);
@@ -179,33 +185,39 @@ class Polyline : DrawableGameComponent
             float dy = _positions[1].Y - _positions[0].Y;
             prevTheta = (float)Math.Atan2(dx, dy);
         }
-        Vector3 prev = _positions[0];
-        Color prevColor = _colors[0];
+        for (int i = 0; i < _points; i++)
+        {
+            _colors[i] = (_colors[i] + 1) % 60;
+        }
+        Vector2 prev = _positions[0];
+        Color prevColor = _palette.Lookup(_colors[0]);
         float prevHx = 0, prevHy = 0;
+        // shorter name
+        VertexPositionColor[] v = _vertices;
         for (int i = 0; i < _segments; i++)
         {
             int vx = i * 6;
-            Vector3 next = _positions[i + 1];
-            Color nextColor = _colors[i + 1];
+            Vector2 next = _positions[i + 1];
+            Color nextColor = _palette.Lookup(_colors[i + 1]);
             float dx = next.X - prev.X;
             float dy = next.Y - prev.Y;
             float theta = (float)Math.Atan2(dx, dy);
 
             float l2 = (dx * dx) + (dy * dy);
-            _vertices[vx + 0].Color = prevColor;
-            _vertices[vx + 1].Color = nextColor;
-            _vertices[vx + 2].Color = prevColor;
-            _vertices[vx + 3].Color = nextColor;
-            _vertices[vx + 4].Color = prevColor;
-            _vertices[vx + 5].Color = nextColor;
+            v[vx + 0].Color = prevColor;
+            v[vx + 1].Color = nextColor;
+            v[vx + 2].Color = prevColor;
+            v[vx + 3].Color = nextColor;
+            v[vx + 4].Color = prevColor;
+            v[vx + 5].Color = nextColor;
             if (l2 == 0)
             {
-                _vertices[vx + 0].Position = prev;
-                _vertices[vx + 1].Position = prev;
-                _vertices[vx + 2].Position = prev;
-                _vertices[vx + 3].Position = prev;
-                _vertices[vx + 4].Position = prev;
-                _vertices[vx + 5].Position = prev;
+                v[vx + 0].Position = new Vector3(prev, 0);
+                v[vx + 1].Position = new Vector3(prev, 0);
+                v[vx + 2].Position = new Vector3(prev, 0);
+                v[vx + 3].Position = new Vector3(prev, 0);
+                v[vx + 4].Position = new Vector3(prev, 0);
+                v[vx + 5].Position = new Vector3(prev, 0);
                 prev = next;
                 prevColor = nextColor;
                 prevTheta = theta;
@@ -219,12 +231,12 @@ class Polyline : DrawableGameComponent
             // P2 +--------+ P3
             // P0 +--------+ P1
             // P4 +--------+ P5
-            _vertices[vx + 0].Position = prev;
-            _vertices[vx + 1].Position = next;
-            _vertices[vx + 2].Position = new Vector3(prev.X + hx, prev.Y + hy, 0);
-            _vertices[vx + 3].Position = new Vector3(next.X + hx, next.Y + hy, 0);
-            _vertices[vx + 4].Position = new Vector3(prev.X - hx, prev.Y - hy, 0);
-            _vertices[vx + 5].Position = new Vector3(next.X - hx, next.Y - hy, 0);
+            v[vx + 0].Position = new Vector3(prev, 0);
+            v[vx + 1].Position = new Vector3(next, 0);
+            v[vx + 2].Position = new Vector3(prev.X + hx, prev.Y + hy, 0);
+            v[vx + 3].Position = new Vector3(next.X + hx, next.Y + hy, 0);
+            v[vx + 4].Position = new Vector3(prev.X - hx, prev.Y - hy, 0);
+            v[vx + 5].Position = new Vector3(next.X - hx, next.Y - hy, 0);
 
             float dt = theta - prevTheta;
             if (dt < 0)
@@ -252,11 +264,11 @@ class Polyline : DrawableGameComponent
                 // have been...
                 if (vx > 0)
                 {
-                    _vertices[vx - 3].Position.X -= prevHy * scale;
-                    _vertices[vx - 3].Position.Y += prevHx * scale;
+                    v[vx - 3].Position.X -= prevHy * scale;
+                    v[vx - 3].Position.Y += prevHx * scale;
                 }
-                _vertices[vx + 2].Position.X += hy * scale;
-                _vertices[vx + 2].Position.Y -= hx * scale;
+                v[vx + 2].Position.X += hy * scale;
+                v[vx + 2].Position.Y -= hx * scale;
             }
             else if (dt < Math.PI)
             {
@@ -265,11 +277,11 @@ class Polyline : DrawableGameComponent
                 // P5.
                 if (vx > 0)
                 {
-                    _vertices[vx - 1].Position.X -= prevHy * scale;
-                    _vertices[vx - 1].Position.Y += prevHx * scale;
+                    v[vx - 1].Position.X -= prevHy * scale;
+                    v[vx - 1].Position.Y += prevHx * scale;
                 }
-                _vertices[vx + 4].Position.X += hy * scale;
-                _vertices[vx + 4].Position.Y -= hx * scale;
+                v[vx + 4].Position.X += hy * scale;
+                v[vx + 4].Position.Y -= hx * scale;
             }
             else
             {
@@ -282,20 +294,41 @@ class Polyline : DrawableGameComponent
             prevHx = hx;
             prevHy = hy;
         }
+        _vertexBuffers[_trailIndex % _trails].SetData(_vertices);
+        _trailIndex++;
+        // we never reuse 0.._trails because those can tell
+        // us we've not yet initialized all the trails
+        if (_trailIndex > (_trails * 2))
+        {
+            _trailIndex -= _trails;
+        }
     }
 
     public override void Draw(GameTime gameTime)
     {
         _effect.CurrentTechnique = _effect.Techniques["Flat"];
         _effect.Parameters["xTranslate"].SetValue(_viewAdapted);
-        foreach (EffectPass pass in _effect.CurrentTechnique.Passes)
-        {
-            pass.Apply();
-        }
+        EffectParameter alphaParam = _effect.Parameters["xAlpha"];
         GraphicsDevice.BlendState = BlendState.Additive;
-        _vertexBuffer.SetData(_vertices);
-        GraphicsDevice.SetVertexBuffer(_vertexBuffer);
+        // same index buffer for everything
         GraphicsDevice.Indices = _indexBuffer;
-        GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, _totalTriangles);
+        // we maintain three times as many trails as we're drawing, and draw only
+        // every third one.
+        for (int i = 2; i < _trails; i += 3)
+        {
+            int idx = _trailIndex - _trails + i;
+            if (idx < 0)
+            {
+                continue;
+            }
+            float alpha = (float)Math.Sqrt((double)((float)(i + 1) / (float)_trails));
+            alphaParam.SetValue(alpha);
+            foreach (EffectPass pass in _effect.CurrentTechnique.Passes)
+            {
+                pass.Apply();
+            }
+            GraphicsDevice.SetVertexBuffer(_vertexBuffers[idx % _trails]);
+            GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, _totalTriangles);
+        }
     }
 }
