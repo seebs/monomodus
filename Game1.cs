@@ -16,6 +16,8 @@ public class Game1 : Game
 
     private Polyline _polyline;
 
+    private Oversaturator _oversaturator;
+
     public Game1()
     {
         _graphics = new GraphicsDeviceManager(this);
@@ -23,8 +25,10 @@ public class Game1 : Game
         IsMouseVisible = true;
         _squares = new Squares(this, 10);
         _polyline = new Polyline(this, 6, 20);
+        _oversaturator = new Oversaturator(this);
         Components.Add(_squares);
         Components.Add(_polyline);
+        Components.Add(_oversaturator);
     }
 
     protected override void Initialize()
@@ -55,7 +59,7 @@ public class Game1 : Game
         GraphicsDevice.Clear(Color.Black);
 
         // TODO: Add your drawing code here
-
+        _oversaturator.RenderHere();
         base.Draw(gameTime);
     }
 }

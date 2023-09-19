@@ -19,6 +19,12 @@
 /processorParam:DebugMode=Auto
 /build:Effects/effects.fx
 
+#begin Effects/oversaturate.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Effects/oversaturate.fx
+
 #begin Textures/square.png
 /importer:TextureImporter
 /processor:TextureProcessor
