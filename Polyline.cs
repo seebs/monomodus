@@ -239,6 +239,11 @@ class Polyline : DrawableGameComponent
             }
             float sharp = (float)(Math.PI / 2 - (Math.Abs(dt - (Math.PI / 2))));
             float scale = (float)(Math.Tan(sharp / 2));
+            // all of this might seem weirdly backwards; why are we using
+            // hy with x, and hx with y? the answer is that hx/hy are the
+            // *normal* vector, with nx = -y and ny = x, scaled to unit
+            // length and then by half thickness,. but we want to
+            // move things along the *original* vector.
             if (left)
             {
                 // we're bending "left". we want
@@ -247,11 +252,11 @@ class Polyline : DrawableGameComponent
                 // have been...
                 if (vx > 0)
                 {
-                    _vertices[vx - 3].Position.X += prevHy * scale;
-                    _vertices[vx - 3].Position.Y -= prevHx * scale;
+                    _vertices[vx - 3].Position.X -= prevHy * scale;
+                    _vertices[vx - 3].Position.Y += prevHx * scale;
                 }
-                _vertices[vx + 2].Position.X -= hy * scale;
-                _vertices[vx + 2].Position.Y += hx * scale;
+                _vertices[vx + 2].Position.X += hy * scale;
+                _vertices[vx + 2].Position.Y -= hx * scale;
             }
             else if (dt < Math.PI)
             {

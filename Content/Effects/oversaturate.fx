@@ -9,6 +9,7 @@
 struct FlatToPixel
 {
     float4 Position : SV_POSITION;
+    float2 texCoord : TEXCOORD0;
 };
 
 struct PixelToFrame
@@ -18,29 +19,42 @@ struct PixelToFrame
 
 //------- Texture Samplers --------
 
-Texture xTexture;
-sampler TextureSampler = sampler_state { texture = <xTexture>; magfilter = LINEAR; minfilter = LINEAR; mipfilter=LINEAR; AddressU = mirror; AddressV = mirror;};
-float4x4 xTranslate;
+Texture xTexture : register(s0);
+sampler TextureSampler = sampler_state { texture = <xTexture>; magfilter = LINEAR; minfilter = LINEAR; mipfilter=LINEAR; AddressU = CLAMP; AddressV = CLAMP;};
 
 FlatToPixel FlatVS(float4 inPos : POSITION)
 {
 	FlatToPixel Output = (FlatToPixel)0;
     Output.Position = inPos;
-    
+    float2 coord = (((float2) inPos + 1) / 2);
+    Output.texCoord = coord;    
 	return Output;    
 }
 
 PixelToFrame FlatPS(FlatToPixel PSIn) 
 {
 	PixelToFrame Output = (PixelToFrame)0;
-    float2 pos;
-    pos[0] = PSIn.Position[0];
-    pos[1] = PSIn.Position[1];	
 	
-	Output.Color = tex2D(TextureSampler, pos) * 0.5;
+	Output.Color = tex2D(TextureSampler, PSIn.texCoord);
 
 	return Output;
 }
+
+PixelToFrame DesatPS(FlatToPixel PSIn) 
+{
+	PixelToFrame Output = (PixelToFrame)0;
+	
+    float4 c = tex2D(TextureSampler, PSIn.texCoord);
+	float scale = max(max(c.r, c.g), max(c.b, 1));
+    Output.Color.rgb = c.rgb / scale;
+    if (scale > 1) {
+        Output.Color += scale / 10;
+    }
+    Output.Color.a = c.a;
+
+	return Output;
+}
+
 
 technique Flat
 {
@@ -48,5 +62,14 @@ technique Flat
 	{   
 		VertexShader = compile VS_SHADERMODEL FlatVS();
 		PixelShader  = compile PS_SHADERMODEL FlatPS();	
+	}
+}
+
+technique Desat
+{
+	pass Pass0
+	{   
+		VertexShader = compile VS_SHADERMODEL FlatVS();
+		PixelShader  = compile PS_SHADERMODEL DesatPS();	
 	}
 }
