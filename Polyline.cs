@@ -69,11 +69,10 @@ class Polyline : DrawableGameComponent
     private float _thicknessHalf;
     private Matrix _viewAdapted;
 
-    private float _theta;
-
-    private int[] _colors;
-    private Vector2[] _positions;
+    public int[] Colors;
+    public Vector2[] Points;
     private Palette _palette;
+    public float[] Alphas;
 
     public Polyline(Game game, int points, int thickness, int trails, Palette palette)
             : base(game)
@@ -82,7 +81,6 @@ class Polyline : DrawableGameComponent
         _segments = _points - 1;
         _thickness = thickness;
         _thicknessHalf = ((float)thickness) / 2;
-        _theta = 0;
         _palette = palette;
         _trails = trails * 3;
         _trailIndex = 0;
@@ -96,8 +94,9 @@ class Polyline : DrawableGameComponent
         int screenWidth = pp.BackBufferWidth;
         int screenHeight = pp.BackBufferHeight;
 
-        _colors = new int[_points];
-        _positions = new Vector2[_points];
+        Colors = new int[_points];
+        Points = new Vector2[_points];
+        Alphas = new float[_points];
         _totalVertices = 6 * _segments;
         _totalIndices = 18 * _segments;
         _totalTriangles = 6 * _segments;
@@ -106,16 +105,9 @@ class Polyline : DrawableGameComponent
 
         for (int i = 0; i < _points; i++)
         {
-            int vertex = i * 6;
-            int index = i * 18;
-            float r = ((float)i / (float)(_segments + 1));
-            float g = 1f - r;
-            _positions[i] = new Vector2(0, 0);
-            _colors[i] = i * 3;
+            Points[i] = new Vector2(0, 0);
+            Colors[i] = 0;
         }
-        _positions[0] = new Vector2(0, 0);
-        _positions[1] = new Vector2(100, 100);
-        _positions[2] = new Vector2(200, 100);
 
         int pp3 = 0;
         int pp5 = 0;
@@ -174,31 +166,24 @@ class Polyline : DrawableGameComponent
 
     public override void Update(GameTime gameTime)
     {
-        _theta += 3 * (float)gameTime.ElapsedGameTime.TotalSeconds;
-        (double s, double c) = Math.SinCos(_theta);
-        _positions[1].X = 100 + 50 * (float)(c - s);
-        _positions[1].Y = 100 + 50 * (float)(c + s);
-
         float prevTheta;
         {
-            float dx = _positions[1].X - _positions[0].X;
-            float dy = _positions[1].Y - _positions[0].Y;
+            float dx = Points[1].X - Points[0].X;
+            float dy = Points[1].Y - Points[0].Y;
             prevTheta = (float)Math.Atan2(dx, dy);
         }
-        for (int i = 0; i < _points; i++)
-        {
-            _colors[i] = (_colors[i] + 1) % 60;
-        }
-        Vector2 prev = _positions[0];
-        Color prevColor = _palette.Lookup(_colors[0]);
+        Vector2 prev = Points[0];
+        Color prevColor = _palette.Lookup(Colors[0]);
+        prevColor.A = (byte)(Alphas[0] * 255);
         float prevHx = 0, prevHy = 0;
         // shorter name
         VertexPositionColor[] v = _vertices;
         for (int i = 0; i < _segments; i++)
         {
             int vx = i * 6;
-            Vector2 next = _positions[i + 1];
-            Color nextColor = _palette.Lookup(_colors[i + 1]);
+            Vector2 next = Points[i + 1];
+            Color nextColor = _palette.Lookup(Colors[i + 1]);
+            nextColor.A = (byte)(Alphas[i] * 255);
             float dx = next.X - prev.X;
             float dy = next.Y - prev.Y;
             float theta = (float)Math.Atan2(dx, dy);

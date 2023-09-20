@@ -98,6 +98,7 @@ class Squares : DrawableGameComponent
 
     public override void Update(GameTime gameTime)
     {
+        _rotations[10] += 0.01f;
         for (int i = 0; i < _totalSquares; i++)
         {
             int vertex = i * 4;
