@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
+using System.Collections.Generic;
 
 namespace MonoModus;
 
@@ -15,12 +16,16 @@ public class Game1 : Game
     private Polyline[] _spirals;
     private Vector2[] _spiralTargets;
     private Vector2[] _spiralDeltas;
+    private Palette _rainbow;
     private int[] _spiralColors;
     private Vector2 _center;
     private int _width, _height;
     private Random _rng;
 
     private Oversaturator _oversaturator;
+
+    private static int[] _ripplePattern = { -1, -2, 0, 2, 1, 0, -1, 0, 1 };
+    private List<int>[] _ripples;
 
     public Game1()
     {
@@ -30,14 +35,16 @@ public class Game1 : Game
         _rng = new Random();
         Content.RootDirectory = "Content";
         IsMouseVisible = true;
-        Palette rainbow = new Palette(12);
+        _rainbow = new Palette(500);
         _spirals = new Polyline[3];
         _spiralTargets = new Vector2[3];
         _spiralDeltas = new Vector2[3];
         _spiralColors = new int[3];
+        _ripples = new List<int>[3];
         for (int i = 0; i < 3; i++)
         {
-            _spirals[i] = new Polyline(this, 200, 2, 2, rainbow);
+            _spirals[i] = new Polyline(this, 1000, 1.5f, 6, _rainbow);
+            _ripples[i] = new List<int>();
             Components.Add(_spirals[i]);
         }
 
@@ -66,9 +73,9 @@ public class Game1 : Game
         {
             _spiralTargets[i].X = (float)_rng.Next(0, _width);
             _spiralTargets[i].Y = (float)_rng.Next(0, _height);
-            _spiralDeltas[i].X = (1.5f - (float)_rng.Next(1, 3)) * (float)_rng.Next(10, 18);
-            _spiralDeltas[i].Y = (1.5f - (float)_rng.Next(1, 3)) * (float)_rng.Next(10, 18);
-            _spiralColors[i] = 24 * i;
+            _spiralDeltas[i].X = (1.5f - (float)_rng.Next(1, 3)) * (float)_rng.Next(5, 9);
+            _spiralDeltas[i].Y = (1.5f - (float)_rng.Next(1, 3)) * (float)_rng.Next(5, 9);
+            _spiralColors[i] = (i * _rainbow.Size()) / 3;
         }
     }
 
@@ -76,12 +83,37 @@ public class Game1 : Game
     {
         if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
             Exit();
+        int[] ripples = new int[_spirals[0].Points.Length];
         for (int i = 0; i < 3; i++)
         {
             int l = _spirals[i].Points.Length;
+            for (int j = 0; j < l; j++)
+            {
+                ripples[j] = 0;
+            }
+            for (int j = 0; j < _ripples[i].Count; j++)
+            {
+                int p = _ripples[i][j];
+                for (int k = 0; k < _ripplePattern.Length; k++)
+                {
+                    ripples[p] += _ripplePattern[k];
+                    p--;
+                    if (p < 0)
+                    {
+                        break;
+                    }
+                }
+                _ripples[i][j] -= 2;
+                if (_ripples[i][j] <= 0)
+                {
+                    _ripples[i].RemoveAt(j);
+                    --j;
+                }
+            }
+            Polyline s = _spirals[i];
             double thetaPerSegment = (Math.PI * 6) / (double)l;
             _spiralColors[i]++;
-            _spiralColors[i] %= 72;
+            _spiralColors[i] %= _rainbow.Size();
             float dx = _spiralTargets[i].X - _center.X;
             float dy = _spiralTargets[i].Y - _center.Y;
             if (dx == 0 && dy == 0)
@@ -89,7 +121,7 @@ public class Game1 : Game
                 // just in case!
                 for (int j = 0; j < l; j++)
                 {
-                    _spirals[i].Points[i] = _center;
+                    s.Points[i] = _center;
                 }
                 continue;
             }
@@ -100,32 +132,42 @@ public class Game1 : Game
             {
                 double theta = ((double)j * thetaPerSegment) + baseTheta;
                 (double sin, double cos) = Math.SinCos(theta);
-                _spirals[i].Points[j].X = _center.X + (float)((sin * radius * j) / (double)l);
-                _spirals[i].Points[j].Y = _center.Y + (float)((cos * radius * j) / (double)l);
-                _spirals[i].Colors[j] = color;
-                color = (color + 1) % 72;
-                _spirals[i].Alphas[j] = 1.0f;
+                s.Points[j].X = _center.X + (float)((sin * radius * (j + ripples[j] * 10)) / (double)l);
+                s.Points[j].Y = _center.Y + (float)((cos * radius * (j + ripples[j] * 10)) / (double)l);
+                s.Colors[j] = color;
+                color = (color + 1) % _rainbow.Size();
+                s.Alphas[j] = 1.0f;
             }
             _spiralTargets[i] += _spiralDeltas[i];
+            bool bounced = false;
             if (_spiralTargets[i].X < 0)
             {
+                bounced = true;
                 _spiralTargets[i].X *= -1;
                 _spiralDeltas[i].X *= -1;
             }
             else if (_spiralTargets[i].X > (float)_width)
             {
+                bounced = true;
                 _spiralTargets[i].X = (float)_width - (_spiralTargets[i].X - (float)_width);
                 _spiralDeltas[i].X *= -1;
             }
             if (_spiralTargets[i].Y < 0)
             {
+                bounced = true;
                 _spiralTargets[i].Y *= -1;
                 _spiralDeltas[i].Y *= -1;
             }
-            else if (_spiralTargets[i].Y > (float)_width)
+            else if (_spiralTargets[i].Y > (float)_height)
             {
-                _spiralTargets[i].Y = (float)_width - (_spiralTargets[i].Y - (float)_width);
+                bounced = true;
+                _spiralTargets[i].Y = (float)_height - (_spiralTargets[i].Y - (float)_height);
                 _spiralDeltas[i].Y *= -1;
+            }
+
+            if (bounced)
+            {
+                _ripples[i].Add(l - 1);
             }
         }
         // TODO: Add your update logic here

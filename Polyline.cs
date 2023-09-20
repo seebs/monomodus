@@ -65,7 +65,7 @@ class Polyline : DrawableGameComponent
     private int _segments;
     private int _trails;
     private int _totalVertices, _totalIndices, _totalTriangles;
-    private int _thickness;
+    private float _thickness;
     private float _thicknessHalf;
     private Matrix _viewAdapted;
 
@@ -74,13 +74,13 @@ class Polyline : DrawableGameComponent
     private Palette _palette;
     public float[] Alphas;
 
-    public Polyline(Game game, int points, int thickness, int trails, Palette palette)
+    public Polyline(Game game, int points, float thickness, int trails, Palette palette)
             : base(game)
     {
         _points = points;
         _segments = _points - 1;
         _thickness = thickness;
-        _thicknessHalf = ((float)thickness) / 2;
+        _thicknessHalf = _thickness / 2;
         _palette = palette;
         _trails = trails * 3;
         _trailIndex = 0;

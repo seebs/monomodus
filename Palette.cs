@@ -29,6 +29,11 @@ class Palette
         }
     }
 
+    public int Size()
+    {
+        return _colors.Length;
+    }
+
     public Color Lookup(int i)
     {
         if (i < 0)
