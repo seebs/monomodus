@@ -20,6 +20,7 @@ public class Game1 : Game
     private int[] _spiralColors;
     private Vector2 _center;
     private int _width, _height;
+    private int _complexity; // palette depth and # of line segments
     private Random _rng;
 
     private Oversaturator _oversaturator;
@@ -30,12 +31,16 @@ public class Game1 : Game
     public Game1()
     {
         _graphics = new GraphicsDeviceManager(this);
+        _graphics.PreferredBackBufferWidth = 1200;  // set this value to the desired width of your window
+        _graphics.PreferredBackBufferHeight = 900;   // set this value to the desired height of your window
+        _graphics.ApplyChanges();
 
 
         _rng = new Random();
         Content.RootDirectory = "Content";
         IsMouseVisible = true;
-        _rainbow = new Palette(500);
+        _complexity = 400;
+        _rainbow = new Palette(_complexity / 2);
         _spirals = new Polyline[3];
         _spiralTargets = new Vector2[3];
         _spiralDeltas = new Vector2[3];
@@ -43,7 +48,7 @@ public class Game1 : Game
         _ripples = new List<int>[3];
         for (int i = 0; i < 3; i++)
         {
-            _spirals[i] = new Polyline(this, 1000, 1.5f, 6, _rainbow);
+            _spirals[i] = new Polyline(this, _complexity, 1.5f, 6, 4, _rainbow);
             _ripples[i] = new List<int>();
             Components.Add(_spirals[i]);
         }
@@ -103,7 +108,7 @@ public class Game1 : Game
                         break;
                     }
                 }
-                _ripples[i][j] -= 2;
+                _ripples[i][j]--;
                 if (_ripples[i][j] <= 0)
                 {
                     _ripples[i].RemoveAt(j);
@@ -111,7 +116,7 @@ public class Game1 : Game
                 }
             }
             Polyline s = _spirals[i];
-            double thetaPerSegment = (Math.PI * 6) / (double)l;
+            double thetaPerSegment = (Math.PI * 4) / (double)l;
             _spiralColors[i]++;
             _spiralColors[i] %= _rainbow.Size();
             float dx = _spiralTargets[i].X - _center.X;
@@ -126,17 +131,24 @@ public class Game1 : Game
                 continue;
             }
             double baseTheta = Math.Atan2((double)dx, (double)dy);
-            double radius = Math.Sqrt((double)(dx * dx + dy * dy));
+            double fullRadius = Math.Sqrt((double)(dx * dx + dy * dy));
+            double partRadius = fullRadius / (double)l;
             int color = _spiralColors[i];
-            for (int j = 0; j < l; j++)
+            double theta = baseTheta;
+            for (int j = l - 1; j >= 0; j--)
             {
-                double theta = ((double)j * thetaPerSegment) + baseTheta;
                 (double sin, double cos) = Math.SinCos(theta);
-                s.Points[j].X = _center.X + (float)((sin * radius * (j + ripples[j] * 10)) / (double)l);
-                s.Points[j].Y = _center.Y + (float)((cos * radius * (j + ripples[j] * 10)) / (double)l);
-                s.Colors[j] = color;
+                double r = partRadius * j;
+                double rippled = r * (double)(40 + ripples[j]) / (double)40;
+                s.Points[j].X = _center.X + (float)(sin * rippled);
+                s.Points[j].Y = _center.Y + (float)(cos * rippled);
+                s.Colors[j] = color + (ripples[j] * _complexity / 5);
                 color = (color + 1) % _rainbow.Size();
                 s.Alphas[j] = 1.0f;
+                if (r > 0)
+                {
+                    theta -= thetaPerSegment * Math.Sqrt(fullRadius / r);
+                }
             }
             _spiralTargets[i] += _spiralDeltas[i];
             bool bounced = false;

@@ -63,7 +63,7 @@ class Polyline : DrawableGameComponent
     private int[] _indices;
     private int _points; // number of points; segments will be one lower
     private int _segments;
-    private int _trails;
+    private int _trails, _trailFrames;
     private int _totalVertices, _totalIndices, _totalTriangles;
     private float _thickness;
     private float _thicknessHalf;
@@ -74,7 +74,7 @@ class Polyline : DrawableGameComponent
     private Palette _palette;
     public float[] Alphas;
 
-    public Polyline(Game game, int points, float thickness, int trails, Palette palette)
+    public Polyline(Game game, int points, float thickness, int trails, int trailFrames, Palette palette)
             : base(game)
     {
         _points = points;
@@ -82,7 +82,8 @@ class Polyline : DrawableGameComponent
         _thickness = thickness;
         _thicknessHalf = _thickness / 2;
         _palette = palette;
-        _trails = trails * 3;
+        _trails = trails * trailFrames;
+        _trailFrames = trailFrames;
         _trailIndex = 0;
     }
 
@@ -299,7 +300,7 @@ class Polyline : DrawableGameComponent
         GraphicsDevice.Indices = _indexBuffer;
         // we maintain three times as many trails as we're drawing, and draw only
         // every third one.
-        for (int i = 2; i < _trails; i += 3)
+        for (int i = _trailFrames - 1; i < _trails; i += _trailFrames)
         {
             int idx = _trailIndex - _trails + i;
             if (idx < 0)
