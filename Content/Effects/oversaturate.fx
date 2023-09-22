@@ -110,9 +110,11 @@ PixelToFrame CombinePS(FlatToPixel PSIn)
     PixelToFrame Output = (PixelToFrame)0;
 	
     float4 base = tex2D(TextureSampler, PSIn.texCoord);
+    float scale = max(max(base.r, base.g), max(base.b, 1));
+    base /= scale;
     float4 highlight = tex2D(HighlightSampler, PSIn.texCoord);
     float4 blur = tex2D(BlurSampler, PSIn.texCoord);
-    float grey = (highlight.r + highlight.g + highlight.b) / 6;
+    float grey = (highlight.r + highlight.g + highlight.b) / 3;
     base *= 1 - saturate(blur);
     Output.Color = base + grey + blur;
     return Output;
