@@ -102,14 +102,17 @@ RenderTargetUsage.PreserveContents);
         GraphicsDevice.SetVertexBuffer(_vertexBuffer);
         GraphicsDevice.Indices = _indexBuffer;
 
+        // switch back to opaque rendering for this part... we need to zero out parts
+        // of _highlights that may have had colors previously.
+        GraphicsDevice.BlendState = BlendState.Opaque;
         DrawFromToUsing(_renderTarget, _highlights, "ExtractHighlight", _fullTranslate);
 
+        GraphicsDevice.SetRenderTarget(null);
         GraphicsDevice.Clear(Color.Gray);
-        GraphicsDevice.BlendState = BlendState.Opaque;
+
         if (_debugging)
         {
             DrawFromToUsing(_renderTarget, null, "Flat", _secondaryTranslates[0]);
-            DrawFromToUsing(_renderTarget, null, "ExtractHighlight", _secondaryTranslates[1]);
             DrawFromToUsing(_highlights, null, "Flat", _secondaryTranslates[2]);
             DrawFromToUsing(_renderTarget, null, "Desat", _primaryTranslate);
         }
