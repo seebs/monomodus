@@ -81,10 +81,10 @@ PixelToFrame BlurXPS(FlatToPixel PSIn)
     float4 cm3 = tex2D(TextureSampler, PSIn.texCoord + float2(-3, 0) * xScale);
     float4 cm2 = tex2D(TextureSampler, PSIn.texCoord + float2(-2, 0) * xScale);
     float4 cm1 = tex2D(TextureSampler, PSIn.texCoord + float2(-1, 0) * xScale);
-	    float4 cp3 = tex2D(TextureSampler, PSIn.texCoord + float2(3, 0) * xScale);
+	float4 cp3 = tex2D(TextureSampler, PSIn.texCoord + float2(3, 0) * xScale);
     float4 cp2 = tex2D(TextureSampler, PSIn.texCoord + float2(2, 0) * xScale);
     float4 cp1 = tex2D(TextureSampler, PSIn.texCoord + float2(1, 0) * xScale);
-    Output.Color = (cm3 + cp3) * 0.125 + (cm2 + cp2) * 0.25 + (cm1 + cp1) * 0.5 + cZ * 0.5;
+    Output.Color = (cm3 + cp3) * 0.0625 + (cm2 + cp2) * 0.125 + (cm1 + cp1) * 0.25 + cZ * 0.3;
     Output.Color.a = 1;
 	return Output;
 }
@@ -97,10 +97,10 @@ PixelToFrame BlurYPS(FlatToPixel PSIn)
     float4 cm3 = tex2D(TextureSampler, PSIn.texCoord + float2(0, -3) * xScale);
     float4 cm2 = tex2D(TextureSampler, PSIn.texCoord + float2(0, -2) * xScale);
     float4 cm1 = tex2D(TextureSampler, PSIn.texCoord + float2(0, -1) * xScale);
-	    float4 cp3 = tex2D(TextureSampler, PSIn.texCoord + float2(0, 3) * xScale);
+	float4 cp3 = tex2D(TextureSampler, PSIn.texCoord + float2(0, 3) * xScale);
     float4 cp2 = tex2D(TextureSampler, PSIn.texCoord + float2(0, 2) * xScale);
     float4 cp1 = tex2D(TextureSampler, PSIn.texCoord + float2(0, 1) * xScale);
-    Output.Color = (cm3 + cp3) * 0.125 + (cm2 + cp2) * 0.25 + (cm1 + cp1) * 0.5 + cZ * 0.5;
+    Output.Color = (cm3 + cp3) * 0.0625 + (cm2 + cp2) * 0.125 + (cm1 + cp1) * 0.25 + cZ * 0.3;
     Output.Color.a = 1;
 	return Output;
 }
@@ -114,7 +114,7 @@ PixelToFrame CombinePS(FlatToPixel PSIn)
     base /= scale;
     float4 highlight = tex2D(HighlightSampler, PSIn.texCoord);
     float4 blur = tex2D(BlurSampler, PSIn.texCoord);
-    float grey = (highlight.r + highlight.g + highlight.b) / 3;
+    float grey = (highlight.r + highlight.g + highlight.b) / 6;
     base *= 1 - saturate(blur);
     Output.Color = base + grey + blur;
     return Output;
