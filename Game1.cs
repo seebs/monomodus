@@ -50,7 +50,7 @@ public class Game1 : Game
         _ripples = new List<int>[3];
         for (int i = 0; i < 3; i++)
         {
-            _spirals[i] = new Polyline(this, _complexity, 10f, 6, 4, _rainbow);
+            _spirals[i] = new Polyline(this, _complexity, 2f, 6, 4, _rainbow);
             _ripples[i] = new List<int>();
             Components.Add(_spirals[i]);
         }
@@ -94,6 +94,26 @@ public class Game1 : Game
         {
             _debugging = !_debugging;
             _oversaturator.Debug(_debugging);
+        }
+        if (kb.IsKeyDown(Keys.D0) && !_prevKB.IsKeyDown(Keys.D0))
+        {
+            _oversaturator.SetPrimary(0);
+        }
+        if (kb.IsKeyDown(Keys.D1) && !_prevKB.IsKeyDown(Keys.D1))
+        {
+            _oversaturator.SetPrimary(1);
+        }
+        if (kb.IsKeyDown(Keys.D2) && !_prevKB.IsKeyDown(Keys.D2))
+        {
+            _oversaturator.SetPrimary(2);
+        }
+        if (kb.IsKeyDown(Keys.D3) && !_prevKB.IsKeyDown(Keys.D3))
+        {
+            _oversaturator.SetPrimary(3);
+        }
+        if (kb.IsKeyDown(Keys.D4) && !_prevKB.IsKeyDown(Keys.D4))
+        {
+            _oversaturator.SetPrimary(4);
         }
         _prevKB = kb;
         if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || kb.IsKeyDown(Keys.Escape))
