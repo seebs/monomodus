@@ -27,6 +27,8 @@ public class Game1 : Game
 
     private static int[] _ripplePattern = { -1, -2, 0, 2, 1, 0, -1, 0, 1 };
     private List<int>[] _ripples;
+    private KeyboardState _prevKB;
+    private bool _debugging;
 
     public Game1()
     {
@@ -48,7 +50,7 @@ public class Game1 : Game
         _ripples = new List<int>[3];
         for (int i = 0; i < 3; i++)
         {
-            _spirals[i] = new Polyline(this, _complexity, 1.5f, 6, 4, _rainbow);
+            _spirals[i] = new Polyline(this, _complexity, 10f, 6, 4, _rainbow);
             _ripples[i] = new List<int>();
             Components.Add(_spirals[i]);
         }
@@ -82,12 +84,22 @@ public class Game1 : Game
             _spiralDeltas[i].Y = (1.5f - (float)_rng.Next(1, 3)) * (float)_rng.Next(5, 9);
             _spiralColors[i] = (i * _rainbow.Size()) / 3;
         }
+        _oversaturator.Debug(false);
     }
 
     protected override void Update(GameTime gameTime)
     {
-        if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
+        KeyboardState kb = Keyboard.GetState();
+        if (kb.IsKeyDown(Keys.D) && !_prevKB.IsKeyDown(Keys.D))
+        {
+            _debugging = !_debugging;
+            _oversaturator.Debug(_debugging);
+        }
+        _prevKB = kb;
+        if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || kb.IsKeyDown(Keys.Escape))
+        {
             Exit();
+        }
         int[] ripples = new int[_spirals[0].Points.Length];
         for (int i = 0; i < 3; i++)
         {

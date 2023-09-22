@@ -4,11 +4,21 @@ using Microsoft.Xna.Framework.Input;
 
 public class Oversaturator : DrawableGameComponent
 {
-    private RenderTarget2D _renderTarget;
+    private RenderTarget2D _renderTarget, _highlights;
     private VertexBuffer _vertexBuffer;
     private IndexBuffer _indexBuffer;
     private Effect _effect;
     private SpriteBatch _spriteBatch;
+    private Matrix _primaryTranslate, _fullTranslate;
+    private Matrix[] _secondaryTranslates;
+    private EffectParameter _textureParam, _translateParam;
+
+    private bool _debugging;
+
+    public void Debug(bool enabled)
+    {
+        _debugging = enabled;
+    }
 
 
     public Oversaturator(Game game) : base(game)
@@ -25,8 +35,11 @@ public class Oversaturator : DrawableGameComponent
         int height = pp.BackBufferHeight;
 
         _renderTarget = new RenderTarget2D(GraphicsDevice, width, height, false,
-                                                   SurfaceFormat.HalfVector4, pp.DepthStencilFormat, pp.MultiSampleCount,
+                                                   SurfaceFormat.HalfVector4, DepthFormat.None, 1,
                                                    RenderTargetUsage.PreserveContents);
+        _highlights = new RenderTarget2D(GraphicsDevice, width, height, false,
+pp.BackBufferFormat, DepthFormat.None, 1,
+RenderTargetUsage.PreserveContents);
         int[] _indices;
         VertexPosition[] _vertices;
         _indices = new int[6];
@@ -46,8 +59,26 @@ public class Oversaturator : DrawableGameComponent
         _vertices[3].Position = new Vector3(1, 1, 0);
         _vertexBuffer.SetData(_vertices);
         _effect = Game.Content.Load<Effect>("Effects/oversaturate");
-        _effect.CurrentTechnique = _effect.Techniques["Desat"];
-        _effect.Parameters["xTexture"].SetValue(_renderTarget);
+        _textureParam = _effect.Parameters["xTexture"];
+        _translateParam = _effect.Parameters["xTranslate"];
+
+        // primary: .7 screen, centered-low
+        Matrix viewTranslate = Matrix.CreateTranslation(0f, -0.3f, 0f);
+        Matrix viewScale = Matrix.CreateScale(0.7f, 0.7f, 1f);
+        _primaryTranslate = Matrix.Multiply(viewScale, viewTranslate);
+
+        // secondary: .3 screen, top left
+        _secondaryTranslates = new Matrix[3];
+        for (int i = 0; i < 3; i++)
+        {
+            float x = (float)(i - 1) * 0.7f;
+            viewTranslate = Matrix.CreateTranslation(x, +0.7f, 0f);
+            viewScale = Matrix.CreateScale(0.3f, 0.3f, 1f);
+            _secondaryTranslates[i] = Matrix.Multiply(viewScale, viewTranslate);
+        }
+
+        // full screen: no translate, no scale
+        _fullTranslate = Matrix.Identity;
     }
 
     public void RenderHere()
@@ -56,17 +87,35 @@ public class Oversaturator : DrawableGameComponent
         GraphicsDevice.Clear(Color.Black);
     }
 
+    private void DrawFromToUsing(RenderTarget2D src, RenderTarget2D dst, string technique, Matrix translation)
+    {
+        GraphicsDevice.SetRenderTarget(dst);
+        _effect.CurrentTechnique = _effect.Techniques[technique];
+        _textureParam.SetValue(src);
+        _translateParam.SetValue(translation);
+        _effect.CurrentTechnique.Passes[0].Apply();
+        GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, 2);
+    }
     public override void Draw(GameTime gameTime)
     {
-        GraphicsDevice.SetRenderTarget(null);
-        GraphicsDevice.BlendState = BlendState.Opaque;
-        foreach (EffectPass pass in _effect.CurrentTechnique.Passes)
-        {
-            pass.Apply();
-        }
-
+        // we believe these will just get reused by everything hereafter
         GraphicsDevice.SetVertexBuffer(_vertexBuffer);
         GraphicsDevice.Indices = _indexBuffer;
-        GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, 2);
+
+        DrawFromToUsing(_renderTarget, _highlights, "ExtractHighlight", _fullTranslate);
+
+        GraphicsDevice.Clear(Color.Gray);
+        GraphicsDevice.BlendState = BlendState.Opaque;
+        if (_debugging)
+        {
+            DrawFromToUsing(_renderTarget, null, "Flat", _secondaryTranslates[0]);
+            DrawFromToUsing(_renderTarget, null, "ExtractHighlight", _secondaryTranslates[1]);
+            DrawFromToUsing(_highlights, null, "Flat", _secondaryTranslates[2]);
+            DrawFromToUsing(_renderTarget, null, "Desat", _primaryTranslate);
+        }
+        else
+        {
+            DrawFromToUsing(_renderTarget, null, "Desat", _fullTranslate);
+        }
     }
 }

@@ -21,11 +21,12 @@ struct PixelToFrame
 
 Texture xTexture : register(s0);
 sampler TextureSampler = sampler_state { texture = <xTexture>; magfilter = LINEAR; minfilter = LINEAR; mipfilter=LINEAR; AddressU = CLAMP; AddressV = CLAMP;};
+float4x4 xTranslate;
 
 FlatToPixel FlatVS(float4 inPos : POSITION)
 {
 	FlatToPixel Output = (FlatToPixel)0;
-    Output.Position = inPos;
+    Output.Position = mul(inPos, xTranslate);
     float2 coord = (((float2) inPos + 1) / 2);
     Output.texCoord = coord;    
 	return Output;    
@@ -55,6 +56,19 @@ PixelToFrame DesatPS(FlatToPixel PSIn)
 	return Output;
 }
 
+PixelToFrame ExtractPS(FlatToPixel PSIn) 
+{
+	PixelToFrame Output = (PixelToFrame)0;
+	
+    float4 c = tex2D(TextureSampler, PSIn.texCoord);
+	float scale = max(max(c.r, c.g), max(c.b, 1));
+    if (scale > 0.5) {
+        Output.Color = scale / 3;
+        Output.Color.a = 1;
+    }
+	return Output;
+}
+
 
 technique Flat
 {
@@ -71,5 +85,14 @@ technique Desat
 	{   
 		VertexShader = compile VS_SHADERMODEL FlatVS();
 		PixelShader  = compile PS_SHADERMODEL DesatPS();	
+	}
+}
+
+technique ExtractHighlight
+{
+	pass Pass0
+	{   
+		VertexShader = compile VS_SHADERMODEL FlatVS();
+		PixelShader  = compile PS_SHADERMODEL ExtractPS();	
 	}
 }
