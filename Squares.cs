@@ -91,8 +91,12 @@ class Squares : DrawableGameComponent
         Matrix viewTranslate = Matrix.CreateTranslation(-1f, -1f, 0f);
         Matrix viewScale = Matrix.CreateScale(2f / (float)screenWidth, 2f / (float)screenHeight, 1f);
         _viewAdapted = Matrix.Multiply(viewScale, viewTranslate);
-
-        _squareTx = Game.Content.Load<Texture2D>("Textures/square");
+        _squareTx = new Texture2D(GraphicsDevice, 64, 64);
+        // Color[] data = new Color[1];
+        // data[0] = Color.White;
+        // _squareTx.SetData(data);
+        // _squareTx = Game.Content.Load<Texture2D>("Textures/square");
+        // _squareTx = new RenderTarget2D(GraphicsDevice, 64, 64, false, pp.BackBufferFormat, DepthFormat.None, 1, RenderTargetUsage.PreserveContents);
         _effect = Game.Content.Load<Effect>("Effects/effects");
     }
 

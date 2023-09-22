@@ -56,7 +56,7 @@ public class Game1 : Game
         }
 
         _squares = new Squares(this, 10);
-        // Components.Add(_squares);
+        Components.Add(_squares);
 
         _oversaturator = new Oversaturator(this);
         Components.Add(_oversaturator);
