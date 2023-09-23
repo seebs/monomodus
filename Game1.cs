@@ -37,7 +37,7 @@ public class Game1 : Game
         _complexity = 400;
         _bigRainbow = new Palette(_complexity / 2);
         _smallRainbow = new Palette(1);
-        _spirals = new Spirals(this, 3, _complexity, 0.005f, 6, 4, _bigRainbow);
+        _spirals = new Spirals(this, 3, _complexity, 0.01f, 6, 4, _bigRainbow);
         Components.Add(_spirals);
 
         _squares = new Squares(this, 7, _smallRainbow);
@@ -93,19 +93,19 @@ public class Game1 : Game
             Exit();
         }
 
-        // for (int row = 0; row < _squares.S.GetLength(0); row++)
-        // {
-        //     for (int col = 0; col < _squares.S.GetLength(1); col++)
-        //     {
-        //         float a = _squares.S[row, col].Alpha;
-        //         a -= 0.001f;
-        //         if (a < 0)
-        //         {
-        //             a = 0;
-        //         }
-        //         _squares.S[row, col].Alpha = a;
-        //     }
-        // }
+        for (int row = 0; row < _squares.S.GetLength(0); row++)
+        {
+            for (int col = 0; col < _squares.S.GetLength(1); col++)
+            {
+                float a = _squares.S[row, col].Alpha;
+                a -= 0.01f;
+                if (a < 0)
+                {
+                    a = 0;
+                }
+                _squares.S[row, col].Alpha = a;
+            }
+        }
 
         base.Update(gameTime);
     }

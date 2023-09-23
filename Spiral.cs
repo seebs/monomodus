@@ -74,7 +74,7 @@ class Spiral
                     break;
                 }
             }
-            _ripples[i]--;
+            _ripples[i] -= (_points / 200) + 1;
             if (_ripples[i] <= 0)
             {
                 _ripples.RemoveAt(i);
