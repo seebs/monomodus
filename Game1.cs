@@ -26,8 +26,8 @@ public class Game1 : Game
     public Game1()
     {
         _graphics = new GraphicsDeviceManager(this);
-        _graphics.PreferredBackBufferWidth = 1200;  // set this value to the desired width of your window
-        _graphics.PreferredBackBufferHeight = 900;   // set this value to the desired height of your window
+        _graphics.PreferredBackBufferWidth = 900;  // set this value to the desired width of your window
+        _graphics.PreferredBackBufferHeight = 600;   // set this value to the desired height of your window
         _graphics.ApplyChanges();
 
 
@@ -37,10 +37,10 @@ public class Game1 : Game
         _complexity = 400;
         _bigRainbow = new Palette(_complexity / 2);
         _smallRainbow = new Palette(1);
-        _spirals = new Spirals(this, 3, _complexity, 2f, 6, 4, _bigRainbow);
+        _spirals = new Spirals(this, 3, _complexity, 0.005f, 6, 4, _bigRainbow);
         Components.Add(_spirals);
 
-        _squares = new Squares(this, 20, _smallRainbow);
+        _squares = new Squares(this, 7, _smallRainbow);
         Components.Add(_squares);
 
         _oversaturator = new Oversaturator(this);
@@ -92,7 +92,20 @@ public class Game1 : Game
         {
             Exit();
         }
-        // TODO: Add your update logic here
+
+        // for (int row = 0; row < _squares.S.GetLength(0); row++)
+        // {
+        //     for (int col = 0; col < _squares.S.GetLength(1); col++)
+        //     {
+        //         float a = _squares.S[row, col].Alpha;
+        //         a -= 0.001f;
+        //         if (a < 0)
+        //         {
+        //             a = 0;
+        //         }
+        //         _squares.S[row, col].Alpha = a;
+        //     }
+        // }
 
         base.Update(gameTime);
     }
@@ -105,4 +118,5 @@ public class Game1 : Game
         _oversaturator.RenderHere();
         base.Draw(gameTime);
     }
+
 }

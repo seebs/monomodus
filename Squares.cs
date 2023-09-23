@@ -16,7 +16,6 @@ struct Square
 class Squares : DrawableGameComponent
 {
     private Texture2D _squareTx;
-    private Texture2D _unusedTx;
 
     private VertexPositionColorTexture[] _vertices;
     private Effect _effect;
@@ -26,16 +25,13 @@ class Squares : DrawableGameComponent
     private int _scale; // the smaller of our width-or-height
     private int _width, _height, _totalSquares, _totalVertices, _totalIndices;
     private float _xOffset, _yOffset;
-    private int _squareSize;
+    private int _squarePx;
+    private float _squareSize;
     private float _squareHalf;
     private Matrix _viewAdapted;
     private Palette _palette;
 
-    public Square[,] _squares;
-
-    private Color[] _colors;
-    private float[] _scales;
-    private float[] _rotations;
+    public Square[,] S;
 
     public Squares(Game game, int scale, Palette palette)
             : base(game)
@@ -51,45 +47,66 @@ class Squares : DrawableGameComponent
 
         int screenWidth = pp.BackBufferWidth;
         int screenHeight = pp.BackBufferHeight;
+        float smaller;
+        float xScale, yScale;
 
         bool sideways = screenWidth < screenHeight;
 
+        // we do some initial math in pixels, to try to get a square size
+        // which is an integer number of pixels...
         if (sideways)
         {
             _width = _scale;
-            _squareSize = screenWidth / _width;
-            _height = screenHeight / _squareSize;
+            _squarePx = screenWidth / _width;
+            _height = screenHeight / _squarePx;
+            smaller = (float)screenWidth;
+
+            xScale = 1.0f;
+            yScale = (float)screenWidth / (float)screenHeight;
         }
         else
         {
             _height = _scale;
-            _squareSize = screenHeight / _height;
-            _width = screenWidth / _squareSize;
+            _squarePx = screenHeight / _height;
+            _width = screenWidth / _squarePx;
+            smaller = (float)screenHeight;
+
+            yScale = 1.0f;
+            xScale = (float)screenHeight / (float)screenWidth;
         }
-        _squares = new Square[_height, _width];
+        S = new Square[_height, _width];
         _totalSquares = _width * _height;
         _totalVertices = _totalSquares * 4;
         _totalIndices = _totalSquares * 6;
 
-        _xOffset = (float)((screenWidth - (_width * _squareSize)) + _squareSize) / 2;
-        _yOffset = (float)((screenHeight - (_height * _squareSize)) + _squareSize) / 2;
+        // we want to be offset by half the size of the grid, but also we want to
+        // center on a hypothetical median square, which means we want to be half
+        // a square off, which we do by being a square off before we compute the
+        // half.
+        _xOffset = (float)((_width - 1) * _squarePx) / -2;
+        _yOffset = (float)((_height - 1) * _squarePx) / -2;
+
+        // okay, but actually what we *want* to do is do everything in units,
+        // so that the smaller dimension of the screen is -1/+1. (not sure why
+        // this is coming out with /smaller instead of /(smaller/2)...)
+        _squareSize = (float)_squarePx / (smaller / 2);
+        _xOffset /= (smaller / 2);
+        _yOffset /= (smaller / 2);
         _squareHalf = (float)_squareSize / 2;
 
         _vertices = new VertexPositionColorTexture[_totalVertices];
         _indices = new int[_totalIndices];
-        _colors = new Color[_totalSquares];
-        _rotations = new float[_totalSquares];
-        _scales = new float[_totalSquares];
         for (int i = 0; i < _totalSquares; i++)
         {
             int vertex = i * 4;
             int index = i * 6;
             int row = (i / _width);
             int col = (i % _width);
-            _squares[row, col].Color = (i % _palette.Size());
-            _squares[row, col].Alpha = 1.0f;
-            _squares[row, col].Scale = 1.0f;
-            _squares[row, col].Rotation = 0f;
+            S[row, col].Color = (i % _palette.Size());
+            S[row, col].Alpha = 1.0f;
+            S[row, col].Scale = 1.0f;
+            S[row, col].Rotation = 0f;
+            S[row, col].Offset = new Vector2(0f, 0f);
             _vertices[vertex + 0].TextureCoordinate = new Vector2(0f, 0f);
             _vertices[vertex + 1].TextureCoordinate = new Vector2(1f, 0f);
             _vertices[vertex + 2].TextureCoordinate = new Vector2(0f, 1f);
@@ -104,9 +121,7 @@ class Squares : DrawableGameComponent
         _indexBuffer = new IndexBuffer(GraphicsDevice, IndexElementSize.ThirtyTwoBits, _totalIndices, BufferUsage.WriteOnly);
         _indexBuffer.SetData(_indices);
         _vertexBuffer = new VertexBuffer(GraphicsDevice, VertexPositionColorTexture.VertexDeclaration, _totalVertices, BufferUsage.WriteOnly);
-        Matrix viewTranslate = Matrix.CreateTranslation(-1f, -1f, 0f);
-        Matrix viewScale = Matrix.CreateScale(2f / (float)screenWidth, 2f / (float)screenHeight, 1f);
-        _viewAdapted = Matrix.Multiply(viewScale, viewTranslate);
+        _viewAdapted = Matrix.CreateScale(xScale, yScale, 1.0f);
         _effect = Game.Content.Load<Effect>("Effects/effects");
     }
 
@@ -117,13 +132,12 @@ class Squares : DrawableGameComponent
 
     public override void Update(GameTime gameTime)
     {
-        _rotations[10] += 0.01f;
         for (int i = 0; i < _totalSquares; i++)
         {
             int vertex = i * 4;
             int row = (i / _width);
             int col = (i % _width);
-            Square s = _squares[row, col];
+            Square s = S[row, col];
             float centerX = _squareSize * (float)col + _xOffset;
             float centerY = _squareSize * (float)row + _yOffset;
             float offset = _squareHalf * s.Scale;

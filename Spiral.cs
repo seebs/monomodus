@@ -17,8 +17,8 @@ class Spiral
     private Polyline _polyline;
     private List<int> _ripples;
     private int _points;
-    private int _width, _height;
     private Game _game;
+    private Vector2 _bounds;
 
     public Spiral(Game game, int points, float thickness, int trails, int trailFrames, Palette palette)
     {
@@ -26,15 +26,32 @@ class Spiral
         _palette = palette;
         _ripples = new List<int>();
         _points = points;
-        _polyline = new Polyline(game, _points, 2f, 6, 4, _palette);
+        _polyline = new Polyline(game, _points, thickness, trails, trailFrames, _palette);
     }
 
     public void LoadContent(GraphicsDevice gd)
     {
         PresentationParameters pp = gd.PresentationParameters;
 
-        _width = pp.BackBufferWidth;
-        _height = pp.BackBufferHeight;
+        int screenWidth = pp.BackBufferWidth;
+        int screenHeight = pp.BackBufferHeight;
+        float xScale, yScale;
+
+        bool sideways = screenWidth < screenHeight;
+
+        // we do some initial math in pixels, to try to get a square size
+        // which is an integer number of pixels...
+        if (sideways)
+        {
+            xScale = 1.0f;
+            yScale = (float)screenWidth / (float)screenHeight;
+        }
+        else
+        {
+            yScale = 1.0f;
+            xScale = (float)screenHeight / (float)screenWidth;
+        }
+        _bounds = new Vector2(x: 1 / xScale, y: 1 / yScale);
         _polyline.LoadContent(gd);
     }
     public void Update(GameTime gameTime)
@@ -99,28 +116,30 @@ class Spiral
         }
         Target += Velocity;
         bool bounced = false;
-        if (Target.X < 0)
+        if ((float)Math.Abs((double)Target.X) > _bounds.X)
         {
             bounced = true;
-            Target.X *= -1;
+            if (Target.X > 0)
+            {
+                Target.X = (2 * _bounds.X) - Target.X;
+            }
+            else
+            {
+                Target.X = (-2 * _bounds.X) - Target.X;
+            }
             Velocity.X *= -1;
         }
-        else if (Target.X > (float)_width)
+        if ((float)Math.Abs((double)Target.Y) > _bounds.Y)
         {
             bounced = true;
-            Target.X = (float)_width - (Target.X - (float)_width);
-            Velocity.X *= -1;
-        }
-        if (Target.Y < 0)
-        {
-            bounced = true;
-            Target.Y *= -1;
-            Velocity.Y *= -1;
-        }
-        else if (Target.Y > (float)_height)
-        {
-            bounced = true;
-            Target.Y = (float)_height - (Target.Y - (float)_height);
+            if (Target.Y > 0)
+            {
+                Target.Y = (2 * _bounds.Y) - Target.Y;
+            }
+            else
+            {
+                Target.Y = (-2 * _bounds.Y) - Target.Y;
+            }
             Velocity.Y *= -1;
         }
 
@@ -140,7 +159,7 @@ class Spiral
 class Spirals : DrawableGameComponent
 {
     private int _count;
-    private int _width, _height;
+    private float _width, _height;
     private Spiral[] _spirals;
     private Random _rng;
     private Vector2 _center;
@@ -164,18 +183,38 @@ class Spirals : DrawableGameComponent
     {
         PresentationParameters pp = GraphicsDevice.PresentationParameters;
 
-        _width = pp.BackBufferWidth;
-        _height = pp.BackBufferHeight;
-        _center.X = _width / 2;
-        _center.Y = _height / 2;
+        int screenWidth = pp.BackBufferWidth;
+        int screenHeight = pp.BackBufferHeight;
+        float xScale, yScale;
+
+        bool sideways = screenWidth < screenHeight;
+
+        // we do some initial math in pixels, to try to get a square size
+        // which is an integer number of pixels...
+        if (sideways)
+        {
+            xScale = 1.0f;
+            yScale = (float)screenWidth / (float)screenHeight;
+        }
+        else
+        {
+            yScale = 1.0f;
+            xScale = (float)screenHeight / (float)screenWidth;
+        }
+
+        _width = xScale;
+        _height = yScale;
+
+        _center.X = 0;
+        _center.Y = 0;
         for (int i = 0; i < _count; i++)
         {
             _spirals[i].Center = _center;
 
-            _spirals[i].Target.X = (float)_rng.Next(0, _width);
-            _spirals[i].Target.Y = (float)_rng.Next(0, _height);
-            _spirals[i].Velocity.X = (1.5f - (float)_rng.Next(1, 3)) * (float)_rng.Next(5, 9);
-            _spirals[i].Velocity.Y = (1.5f - (float)_rng.Next(1, 3)) * (float)_rng.Next(5, 9);
+            _spirals[i].Target.X = (float)_rng.NextDouble(); //  * _width * 2 - _width;
+            _spirals[i].Target.Y = (float)_rng.NextDouble(); // * _height * 2 - _height;
+            _spirals[i].Velocity.X = (1.5f - (float)_rng.Next(1, 3)) * (float)(_rng.NextDouble() + 1) / 64;
+            _spirals[i].Velocity.Y = (1.5f - (float)_rng.Next(1, 3)) * (float)(_rng.NextDouble() + 1) / 64;
             _spirals[i].Color = (i * _palette.Size()) / _count;
             _spirals[i].LoadContent(GraphicsDevice);
         }

@@ -96,6 +96,22 @@ class Polyline
 
         int screenWidth = pp.BackBufferWidth;
         int screenHeight = pp.BackBufferHeight;
+        float xScale, yScale;
+
+        bool sideways = screenWidth < screenHeight;
+
+        // we do some initial math in pixels, to try to get a square size
+        // which is an integer number of pixels...
+        if (sideways)
+        {
+            xScale = 1.0f;
+            yScale = (float)screenWidth / (float)screenHeight;
+        }
+        else
+        {
+            yScale = 1.0f;
+            xScale = (float)screenHeight / (float)screenWidth;
+        }
 
         Colors = new int[_points];
         Points = new Vector2[_points];
@@ -157,14 +173,11 @@ class Polyline
         {
             _vertexBuffers[i] = new VertexBuffer(gd, VertexPositionColor.VertexDeclaration, _totalVertices, BufferUsage.WriteOnly);
         }
-        Matrix viewTranslate = Matrix.CreateTranslation(-1f, -1f, 0f);
-        Matrix viewScale = Matrix.CreateScale(2f / (float)screenWidth, 2f / (float)screenHeight, 1f);
-        _viewAdapted = Matrix.Multiply(viewScale, viewTranslate);
+        _viewAdapted = Matrix.CreateScale(xScale, yScale, 1f);
 
         _effect = _game.Content.Load<Effect>("Effects/effects");
         _effect.CurrentTechnique = _effect.Techniques["Flat"];
         _effect.Parameters["xTranslate"].SetValue(_viewAdapted);
-
     }
 
     public void Update(GameTime gameTime)
