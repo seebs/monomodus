@@ -6,6 +6,13 @@ using System;
 
 namespace MonoModus;
 
+struct Square
+{
+    public int Color;
+    public Vector2 Offset;
+    public float Alpha, Scale, Rotation;
+}
+
 class Squares : DrawableGameComponent
 {
     private Texture2D _squareTx;
@@ -22,15 +29,19 @@ class Squares : DrawableGameComponent
     private int _squareSize;
     private float _squareHalf;
     private Matrix _viewAdapted;
+    private Palette _palette;
+
+    public Square[,] _squares;
 
     private Color[] _colors;
     private float[] _scales;
     private float[] _rotations;
 
-    public Squares(Game game, int scale)
+    public Squares(Game game, int scale, Palette palette)
             : base(game)
     {
         _scale = scale;
+        _palette = palette;
     }
 
     protected override void LoadContent()
@@ -55,6 +66,7 @@ class Squares : DrawableGameComponent
             _squareSize = screenHeight / _height;
             _width = screenWidth / _squareSize;
         }
+        _squares = new Square[_height, _width];
         _totalSquares = _width * _height;
         _totalVertices = _totalSquares * 4;
         _totalIndices = _totalSquares * 6;
@@ -72,9 +84,12 @@ class Squares : DrawableGameComponent
         {
             int vertex = i * 4;
             int index = i * 6;
-            _colors[i] = Color.White;
-            _scales[i] = ((float)((i % _width) + 1) / (float)_width);
-            _rotations[i] = (((float)i) / ((float)_totalSquares)) * (float)Math.PI;
+            int row = (i / _width);
+            int col = (i % _width);
+            _squares[row, col].Color = (i % _palette.Size());
+            _squares[row, col].Alpha = 1.0f;
+            _squares[row, col].Scale = 1.0f;
+            _squares[row, col].Rotation = 0f;
             _vertices[vertex + 0].TextureCoordinate = new Vector2(0f, 0f);
             _vertices[vertex + 1].TextureCoordinate = new Vector2(1f, 0f);
             _vertices[vertex + 2].TextureCoordinate = new Vector2(0f, 1f);
@@ -92,15 +107,12 @@ class Squares : DrawableGameComponent
         Matrix viewTranslate = Matrix.CreateTranslation(-1f, -1f, 0f);
         Matrix viewScale = Matrix.CreateScale(2f / (float)screenWidth, 2f / (float)screenHeight, 1f);
         _viewAdapted = Matrix.Multiply(viewScale, viewTranslate);
-        // UNCOMMENT THIS LINE HERE AND EVERYTHING STOPS WORKING:
-        //
-        // _unusedTx = new Texture2D(GraphicsDevice, 64, 64);
-        // Color[] data = new Color[1];
-        // data[0] = Color.White;
-        // _squareTx.SetData(data);
-        // _squareTx = Game.Content.Load<Texture2D>("Textures/square");
-        _squareTx = new RenderTarget2D(GraphicsDevice, 64, 64, false, pp.BackBufferFormat, DepthFormat.None, 1, RenderTargetUsage.PreserveContents);
         _effect = Game.Content.Load<Effect>("Effects/effects");
+    }
+
+    public void LoadTextures()
+    {
+        _squareTx = Game.Content.Load<Texture2D>("Textures/square");
     }
 
     public override void Update(GameTime gameTime)
@@ -109,20 +121,23 @@ class Squares : DrawableGameComponent
         for (int i = 0; i < _totalSquares; i++)
         {
             int vertex = i * 4;
-            int x = (i % _width);
-            int y = (i / _width);
-            float centerX = _squareSize * (float)x + _xOffset;
-            float centerY = _squareSize * (float)y + _yOffset;
-            float offset = _squareHalf * _scales[i];
-            (double sinD, double cosD) = Math.SinCos((double)_rotations[i]);
+            int row = (i / _width);
+            int col = (i % _width);
+            Square s = _squares[row, col];
+            float centerX = _squareSize * (float)col + _xOffset;
+            float centerY = _squareSize * (float)row + _yOffset;
+            float offset = _squareHalf * s.Scale;
+            (double sinD, double cosD) = Math.SinCos((double)s.Rotation);
             float sin = (float)sinD;
             float cos = (float)cosD;
             float offsetX = (cos * offset) - (sin * offset);
             float offsetY = (cos * offset) + (sin * offset);
-            _vertices[vertex + 0].Color = _colors[i];
-            _vertices[vertex + 1].Color = _colors[i];
-            _vertices[vertex + 2].Color = _colors[i];
-            _vertices[vertex + 3].Color = _colors[i];
+            Color c = _palette.Lookup(s.Color);
+            c.A = (byte)(s.Alpha * 255);
+            _vertices[vertex + 0].Color = c;
+            _vertices[vertex + 1].Color = c;
+            _vertices[vertex + 2].Color = c;
+            _vertices[vertex + 3].Color = c;
             _vertices[vertex + 0].Position = new Vector3(centerX - offsetX, centerY - offsetY, 0f);
             _vertices[vertex + 1].Position = new Vector3(centerX - offsetY, centerY + offsetX, 0f);
             _vertices[vertex + 2].Position = new Vector3(centerX + offsetY, centerY - offsetX, 0f);

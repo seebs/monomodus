@@ -8,12 +8,12 @@ public class Oversaturator : DrawableGameComponent
     private VertexBuffer _vertexBuffer;
     private IndexBuffer _indexBuffer;
     private Effect _effect;
-    private SpriteBatch _spriteBatch;
     private Matrix _primaryTranslate, _fullTranslate;
     private Matrix[] _secondaryTranslates;
     private EffectParameter _textureParam, _translateParam, _scaleParam, _highlightParam, _blurParam;
     private Vector2 _screenSizeRecip;
     private int _primaryDisplay;
+    private Texture2D _scratch;
 
     private bool _debugging;
 
@@ -35,7 +35,7 @@ public class Oversaturator : DrawableGameComponent
 
     protected override void LoadContent()
     {
-        _spriteBatch = new SpriteBatch(GraphicsDevice);
+
         PresentationParameters pp = GraphicsDevice.PresentationParameters;
 
         int width = pp.BackBufferWidth;
@@ -43,11 +43,12 @@ public class Oversaturator : DrawableGameComponent
         _screenSizeRecip = new Vector2(1 / (float)width, 1 / (float)height);
 
         _renderTarget = new RenderTarget2D(GraphicsDevice, width, height, false,
-                                                   SurfaceFormat.HalfVector4, DepthFormat.None, 1,
-                                                   RenderTargetUsage.PreserveContents);
+                                                   SurfaceFormat.HdrBlendable, DepthFormat.None, 1,
+                                                   RenderTargetUsage.DiscardContents);
         _highlights = new RenderTarget2D(GraphicsDevice, width, height, false, pp.BackBufferFormat, DepthFormat.None, 1, RenderTargetUsage.PreserveContents);
         _blur1 = new RenderTarget2D(GraphicsDevice, width / 2, height / 2, false, pp.BackBufferFormat, DepthFormat.None, 1, RenderTargetUsage.PreserveContents);
         _blur2 = new RenderTarget2D(GraphicsDevice, width / 2, height / 2, false, pp.BackBufferFormat, DepthFormat.None, 1, RenderTargetUsage.PreserveContents);
+
         int[] _indices;
         VertexPosition[] _vertices;
         _indices = new int[6];
@@ -99,6 +100,9 @@ public class Oversaturator : DrawableGameComponent
 
         // full screen: no translate, no scale
         _fullTranslate = Matrix.Identity;
+
+        // show the final product largest
+        _primaryDisplay = 4;
     }
 
     public void RenderHere()
@@ -146,7 +150,7 @@ public class Oversaturator : DrawableGameComponent
         // of _highlights that may have had colors previously.
         GraphicsDevice.BlendState = BlendState.Opaque;
         DrawFromToUsing(_renderTarget, _highlights, "ExtractHighlight", -1);
-        DrawFromToUsing(_highlights, _blur1, "BlurX", -1);
+        DrawFromToUsing(_renderTarget, _blur1, "BlurX", -1);
         DrawFromToUsing(_blur1, _blur2, "BlurY", -1);
         _highlightParam.SetValue(_highlights);
         _blurParam.SetValue(_blur2);

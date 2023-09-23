@@ -53,7 +53,7 @@ namespace MonoModus;
 // indexes -- we don't know *which* previous points the bezel is reusing.
 
 
-class Polyline : DrawableGameComponent
+class Polyline
 {
     private VertexPositionColor[] _vertices;
     private int _trailIndex;
@@ -68,15 +68,17 @@ class Polyline : DrawableGameComponent
     private float _thickness;
     private float _thicknessHalf;
     private Matrix _viewAdapted;
+    private Game _game;
 
     public int[] Colors;
     public Vector2[] Points;
     private Palette _palette;
     public float[] Alphas;
 
+
     public Polyline(Game game, int points, float thickness, int trails, int trailFrames, Palette palette)
-            : base(game)
     {
+        _game = game;
         _points = points;
         _segments = _points - 1;
         _thickness = thickness;
@@ -87,10 +89,10 @@ class Polyline : DrawableGameComponent
         _trailIndex = 0;
     }
 
-    protected override void LoadContent()
+    public void LoadContent(GraphicsDevice gd)
     {
         // Look up the resolution and format of our main backbuffer.
-        PresentationParameters pp = GraphicsDevice.PresentationParameters;
+        PresentationParameters pp = gd.PresentationParameters;
 
         int screenWidth = pp.BackBufferWidth;
         int screenHeight = pp.BackBufferHeight;
@@ -148,24 +150,24 @@ class Polyline : DrawableGameComponent
             pp5 = vx + 5;
         }
 
-        _indexBuffer = new IndexBuffer(GraphicsDevice, IndexElementSize.ThirtyTwoBits, _totalIndices, BufferUsage.WriteOnly);
+        _indexBuffer = new IndexBuffer(gd, IndexElementSize.ThirtyTwoBits, _totalIndices, BufferUsage.WriteOnly);
         _indexBuffer.SetData(_indices);
         _vertexBuffers = new VertexBuffer[_trails];
         for (int i = 0; i < _trails; i++)
         {
-            _vertexBuffers[i] = new VertexBuffer(GraphicsDevice, VertexPositionColor.VertexDeclaration, _totalVertices, BufferUsage.WriteOnly);
+            _vertexBuffers[i] = new VertexBuffer(gd, VertexPositionColor.VertexDeclaration, _totalVertices, BufferUsage.WriteOnly);
         }
         Matrix viewTranslate = Matrix.CreateTranslation(-1f, -1f, 0f);
         Matrix viewScale = Matrix.CreateScale(2f / (float)screenWidth, 2f / (float)screenHeight, 1f);
         _viewAdapted = Matrix.Multiply(viewScale, viewTranslate);
 
-        _effect = Game.Content.Load<Effect>("Effects/effects");
+        _effect = _game.Content.Load<Effect>("Effects/effects");
         _effect.CurrentTechnique = _effect.Techniques["Flat"];
         _effect.Parameters["xTranslate"].SetValue(_viewAdapted);
 
     }
 
-    public override void Update(GameTime gameTime)
+    public void Update(GameTime gameTime)
     {
         float prevTheta;
         {
@@ -290,14 +292,14 @@ class Polyline : DrawableGameComponent
         }
     }
 
-    public override void Draw(GameTime gameTime)
+    public void Draw(GameTime gameTime, GraphicsDevice gd)
     {
         _effect.CurrentTechnique = _effect.Techniques["Flat"];
         _effect.Parameters["xTranslate"].SetValue(_viewAdapted);
         EffectParameter alphaParam = _effect.Parameters["xAlpha"];
-        GraphicsDevice.BlendState = BlendState.Additive;
+        gd.BlendState = BlendState.Additive;
         // same index buffer for everything
-        GraphicsDevice.Indices = _indexBuffer;
+        gd.Indices = _indexBuffer;
         // we maintain three times as many trails as we're drawing, and draw only
         // every third one.
         for (int i = _trailFrames - 1; i < _trails; i += _trailFrames)
@@ -313,8 +315,8 @@ class Polyline : DrawableGameComponent
             {
                 pass.Apply();
             }
-            GraphicsDevice.SetVertexBuffer(_vertexBuffers[idx % _trails]);
-            GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, _totalTriangles);
+            gd.SetVertexBuffer(_vertexBuffers[idx % _trails]);
+            gd.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, _totalTriangles);
         }
     }
 }
