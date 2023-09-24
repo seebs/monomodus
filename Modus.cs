@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 namespace MonoModus;
 
-public class Game1 : Game
+public class Modus : Game
 {
     private GraphicsDeviceManager _graphics;
 
@@ -23,11 +23,11 @@ public class Game1 : Game
     private KeyboardState _prevKB;
     private bool _debugging;
 
-    public Game1()
+    public Modus()
     {
         _graphics = new GraphicsDeviceManager(this);
-        _graphics.PreferredBackBufferWidth = 900;  // set this value to the desired width of your window
-        _graphics.PreferredBackBufferHeight = 600;   // set this value to the desired height of your window
+        _graphics.PreferredBackBufferWidth = 1200;  // set this value to the desired width of your window
+        _graphics.PreferredBackBufferHeight = 900;   // set this value to the desired height of your window
         _graphics.ApplyChanges();
 
 
@@ -37,20 +37,39 @@ public class Game1 : Game
         _complexity = 400;
         _bigRainbow = new Palette(_complexity / 2);
         _smallRainbow = new Palette(1);
-        _spirals = new Spirals(this, 3, _complexity, 0.01f, 6, 4, _bigRainbow);
+        _spirals = new Spirals(this, 3, _complexity, 0.005f, 6, 4, _bigRainbow);
         Components.Add(_spirals);
 
-        _squares = new Squares(this, 7, _smallRainbow);
+        _squares = new Squares(this, 30, _bigRainbow);
         Components.Add(_squares);
 
         _oversaturator = new Oversaturator(this);
         Components.Add(_oversaturator);
     }
 
+    public void Notice(Vector2 pos, Vector2 velocity, int c)
+    {
+        (int row, int col, bool ok) = _squares.SquareAt(pos);
+        if (ok)
+        {
+            _squares.S[row, col].Color = c;
+            _squares.S[row, col].Alpha = 1.0f;
+            _squares.S[row, col].Offset += velocity * 2;
+        }
+    }
+
     protected override void Initialize()
     {
         // TODO: Add your initialization logic here
         base.Initialize();
+        // start empty
+        for (int row = 0; row < _squares.S.GetLength(0); row++)
+        {
+            for (int col = 0; col < _squares.S.GetLength(1); col++)
+            {
+                _squares.S[row, col].Alpha = 0;
+            }
+        }
     }
 
     protected override void LoadContent()
@@ -97,13 +116,7 @@ public class Game1 : Game
         {
             for (int col = 0; col < _squares.S.GetLength(1); col++)
             {
-                float a = _squares.S[row, col].Alpha;
-                a -= 0.01f;
-                if (a < 0)
-                {
-                    a = 0;
-                }
-                _squares.S[row, col].Alpha = a;
+                _squares.S[row, col].Alpha *= 0.999f;
             }
         }
 

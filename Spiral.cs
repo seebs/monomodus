@@ -17,15 +17,17 @@ class Spiral
     private Polyline _polyline;
     private List<int> _ripples;
     private int _points;
-    private Game _game;
+    private Modus _game;
     private Vector2 _bounds;
+    private float _spinny;
 
-    public Spiral(Game game, int points, float thickness, int trails, int trailFrames, Palette palette)
+    public Spiral(Modus game, int points, float spinny, float thickness, int trails, int trailFrames, Palette palette)
     {
         _game = game;
         _palette = palette;
         _ripples = new List<int>();
         _points = points;
+        _spinny = spinny;
         _polyline = new Polyline(game, _points, thickness, trails, trailFrames, _palette);
     }
 
@@ -111,7 +113,7 @@ class Spiral
             _polyline.Alphas[i] = 1.0f;
             if (r > 0)
             {
-                theta -= thetaPerSegment * Math.Sqrt(fullRadius / r);
+                theta += (double)_spinny * thetaPerSegment * Math.Sqrt(fullRadius / r);
             }
         }
         Target += Velocity;
@@ -147,6 +149,7 @@ class Spiral
         {
             _ripples.Add(l - 1);
         }
+        _game.Notice(Target, Velocity, Color);
         _polyline.Update(gameTime);
     }
 
@@ -166,7 +169,7 @@ class Spirals : DrawableGameComponent
     private Palette _palette;
 
 
-    public Spirals(Game game, int spirals, int points, float thickness, int trails, int trailFrames, Palette palette)
+    public Spirals(Modus game, int spirals, int points, float thickness, int trails, int trailFrames, Palette palette)
             : base(game)
     {
         _count = spirals;
@@ -175,7 +178,8 @@ class Spirals : DrawableGameComponent
         _rng = new Random();
         for (int i = 0; i < _count; i++)
         {
-            _spirals[i] = new Spiral(game, points, thickness, trails, trailFrames, _palette);
+            float spinny = 1.0f;
+            _spirals[i] = new Spiral(game, points, spinny, thickness, trails, trailFrames, _palette);
         }
     }
 
@@ -213,8 +217,8 @@ class Spirals : DrawableGameComponent
 
             _spirals[i].Target.X = (float)_rng.NextDouble(); //  * _width * 2 - _width;
             _spirals[i].Target.Y = (float)_rng.NextDouble(); // * _height * 2 - _height;
-            _spirals[i].Velocity.X = (1.5f - (float)_rng.Next(1, 3)) * (float)(_rng.NextDouble() + 1) / 64;
-            _spirals[i].Velocity.Y = (1.5f - (float)_rng.Next(1, 3)) * (float)(_rng.NextDouble() + 1) / 64;
+            _spirals[i].Velocity.X = (1.5f - (float)_rng.Next(1, 3)) * (float)(_rng.NextDouble() + 1) / 96;
+            _spirals[i].Velocity.Y = (1.5f - (float)_rng.Next(1, 3)) * (float)(_rng.NextDouble() + 1) / 96;
             _spirals[i].Color = (i * _palette.Size()) / _count;
             _spirals[i].LoadContent(GraphicsDevice);
         }

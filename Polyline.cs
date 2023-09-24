@@ -68,7 +68,7 @@ class Polyline
     private float _thickness;
     private float _thicknessHalf;
     private Matrix _viewAdapted;
-    private Game _game;
+    private Modus _game;
 
     public int[] Colors;
     public Vector2[] Points;
@@ -76,7 +76,7 @@ class Polyline
     public float[] Alphas;
 
 
-    public Polyline(Game game, int points, float thickness, int trails, int trailFrames, Palette palette)
+    public Polyline(Modus game, int points, float thickness, int trails, int trailFrames, Palette palette)
     {
         _game = game;
         _points = points;

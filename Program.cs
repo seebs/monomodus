@@ -1,3 +1,3 @@
 ﻿
-using var game = new MonoModus.Game1();
+using var game = new MonoModus.Modus();
 game.Run();

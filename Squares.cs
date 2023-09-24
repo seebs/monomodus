@@ -10,6 +10,7 @@ struct Square
 {
     public int Color;
     public Vector2 Offset;
+    public Vector2 Velocity;
     public float Alpha, Scale, Rotation;
 }
 
@@ -30,14 +31,35 @@ class Squares : DrawableGameComponent
     private float _squareHalf;
     private Matrix _viewAdapted;
     private Palette _palette;
+    private Modus _game;
 
     public Square[,] S;
 
-    public Squares(Game game, int scale, Palette palette)
+    public Squares(Modus game, int scale, Palette palette)
             : base(game)
     {
+        _game = game;
         _scale = scale;
         _palette = palette;
+    }
+
+    public (int row, int col, bool ok) SquareAt(Vector2 pos)
+    {
+        int col = (int)Math.Floor((double)((pos.X - _xOffset) / _squareSize) + 0.5);
+        int row = (int)Math.Floor((double)((pos.Y - _yOffset) / _squareSize) + 0.5);
+        return (row, col, (row >= 0 && row < _height && col >= 0 && col < _width));
+    }
+
+    // handle velocity-and-snap-back for a square
+    private void squareSnap(int row, int col)
+    {
+        Square s = S[row, col];
+        // if we're off center, adjust our velocity towards the center:
+        // move in the direction we're moving...
+        s.Velocity *= 0.95f;
+        s.Velocity -= s.Offset / 4;
+        s.Offset += s.Velocity;
+        S[row, col] = s;
     }
 
     protected override void LoadContent()
@@ -138,24 +160,29 @@ class Squares : DrawableGameComponent
             int row = (i / _width);
             int col = (i % _width);
             Square s = S[row, col];
-            float centerX = _squareSize * (float)col + _xOffset;
-            float centerY = _squareSize * (float)row + _yOffset;
+            if (s.Offset != Vector2.Zero || s.Velocity != Vector2.Zero)
+            {
+                squareSnap(row, col);
+                s = S[row, col];
+            }
+            float centerX = _squareSize * ((float)col + s.Offset.X) + _xOffset;
+            float centerY = _squareSize * ((float)row + s.Offset.Y) + _yOffset;
             float offset = _squareHalf * s.Scale;
             (double sinD, double cosD) = Math.SinCos((double)s.Rotation);
             float sin = (float)sinD;
             float cos = (float)cosD;
-            float offsetX = (cos * offset) - (sin * offset);
-            float offsetY = (cos * offset) + (sin * offset);
+            float cornerX = (cos * offset) - (sin * offset);
+            float cornerY = (cos * offset) + (sin * offset);
             Color c = _palette.Lookup(s.Color);
             c.A = (byte)(s.Alpha * 255);
             _vertices[vertex + 0].Color = c;
             _vertices[vertex + 1].Color = c;
             _vertices[vertex + 2].Color = c;
             _vertices[vertex + 3].Color = c;
-            _vertices[vertex + 0].Position = new Vector3(centerX - offsetX, centerY - offsetY, 0f);
-            _vertices[vertex + 1].Position = new Vector3(centerX - offsetY, centerY + offsetX, 0f);
-            _vertices[vertex + 2].Position = new Vector3(centerX + offsetY, centerY - offsetX, 0f);
-            _vertices[vertex + 3].Position = new Vector3(centerX + offsetX, centerY + offsetY, 0f);
+            _vertices[vertex + 0].Position = new Vector3(centerX - cornerX, centerY - cornerY, 0f);
+            _vertices[vertex + 1].Position = new Vector3(centerX - cornerY, centerY + cornerX, 0f);
+            _vertices[vertex + 2].Position = new Vector3(centerX + cornerY, centerY - cornerX, 0f);
+            _vertices[vertex + 3].Position = new Vector3(centerX + cornerX, centerY + cornerY, 0f);
         }
     }
 
