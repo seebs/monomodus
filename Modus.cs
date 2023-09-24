@@ -40,21 +40,26 @@ public class Modus : Game
         _spirals = new Spirals(this, 3, _complexity, 0.005f, 6, 4, _bigRainbow);
         Components.Add(_spirals);
 
-        _squares = new Squares(this, 30, _bigRainbow);
+        _squares = new Squares(this, 60, _bigRainbow);
         Components.Add(_squares);
 
         _oversaturator = new Oversaturator(this);
         Components.Add(_oversaturator);
     }
 
-    public void Notice(Vector2 pos, Vector2 velocity, int c)
+    public void Notice(Vector2 pos, Vector2 velocity, float intensity, int c)
     {
         (int row, int col, bool ok) = _squares.SquareAt(pos);
         if (ok)
         {
             _squares.S[row, col].Color = c;
-            _squares.S[row, col].Alpha = 1.0f;
-            _squares.S[row, col].Offset += velocity * 2;
+            _squares.S[row, col].Alpha += 0.1f * intensity;
+            _squares.S[row, col].Scale += 0.1f * intensity;
+            if (_squares.S[row, col].Scale > 1)
+            {
+                _squares.S[row, col].Scale = 1.0f;
+            }
+            // _squares.S[row, col].Offset += velocity * 2;
         }
     }
 
@@ -116,7 +121,11 @@ public class Modus : Game
         {
             for (int col = 0; col < _squares.S.GetLength(1); col++)
             {
-                _squares.S[row, col].Alpha *= 0.999f;
+                _squares.S[row, col].Alpha *= 0.997f;
+                if (_squares.S[row, col].Scale > 0.5f)
+                {
+                    _squares.S[row, col].Scale *= 0.999f;
+                }
             }
         }
 

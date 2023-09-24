@@ -106,9 +106,14 @@ class Spiral
             (double sin, double cos) = Math.SinCos(theta);
             double r = partRadius * i;
             double rippled = r * (double)(40 + ripples[i]) / (double)40;
+            Vector2 prev = _polyline.Points[i];
             _polyline.Points[i].X = Center.X + (float)(sin * rippled);
             _polyline.Points[i].Y = Center.Y + (float)(cos * rippled);
             _polyline.Colors[i] = color + (ripples[i] * _points / 5);
+            if (ripples[i] != 0)
+            {
+                _game.Notice(_polyline.Points[i], _polyline.Points[i] - prev, (float)Math.Abs((double)ripples[i]), _polyline.Colors[i]);
+            }
             color = (color + 1) % _palette.Size();
             _polyline.Alphas[i] = 1.0f;
             if (r > 0)
@@ -149,7 +154,7 @@ class Spiral
         {
             _ripples.Add(l - 1);
         }
-        _game.Notice(Target, Velocity, Color);
+        // _game.Notice(Target, Velocity, 1, Color);
         _polyline.Update(gameTime);
     }
 
