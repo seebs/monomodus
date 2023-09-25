@@ -121,7 +121,7 @@ public class Modus : Game
         {
             for (int col = 0; col < _squares.S.GetLength(1); col++)
             {
-                _squares.S[row, col].Alpha *= 0.997f;
+                _squares.S[row, col].Alpha *= 0.995f;
                 if (_squares.S[row, col].Scale > 0.5f)
                 {
                     _squares.S[row, col].Scale *= 0.999f;

@@ -112,7 +112,7 @@ class Spiral
             _polyline.Colors[i] = color + (ripples[i] * _points / 5);
             if (ripples[i] != 0)
             {
-                _game.Notice(_polyline.Points[i], _polyline.Points[i] - prev, (float)Math.Abs((double)ripples[i]), _polyline.Colors[i]);
+                _game.Notice(_polyline.Points[i], _polyline.Points[i] - prev, (float)Math.Sqrt(r / fullRadius) * (float)Math.Abs((double)ripples[i]), _polyline.Colors[i]);
             }
             color = (color + 1) % _palette.Size();
             _polyline.Alphas[i] = 1.0f;
