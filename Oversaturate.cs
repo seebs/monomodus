@@ -13,6 +13,7 @@ public class Oversaturator : DrawableGameComponent
     private EffectParameter _textureParam, _translateParam, _scaleParam, _highlightParam, _blurParam;
     private Vector2 _screenSizeRecip;
     private int _primaryDisplay;
+    private Texture2D _unused;
 
     private bool _debugging;
 
@@ -41,9 +42,11 @@ public class Oversaturator : DrawableGameComponent
         int height = pp.BackBufferHeight;
         _screenSizeRecip = new Vector2(1 / (float)width, 1 / (float)height);
 
+        // _unused = new Texture2D(GraphicsDevice, 64, 64);
         _renderTarget = new RenderTarget2D(GraphicsDevice, width, height, false,
                                                    SurfaceFormat.HdrBlendable, DepthFormat.None, 1,
                                                    RenderTargetUsage.DiscardContents);
+        _unused = new Texture2D(GraphicsDevice, 64, 64);
         _highlights = new RenderTarget2D(GraphicsDevice, width, height, false, pp.BackBufferFormat, DepthFormat.None, 1, RenderTargetUsage.PreserveContents);
         _blur1 = new RenderTarget2D(GraphicsDevice, width / 2, height / 2, false, pp.BackBufferFormat, DepthFormat.None, 1, RenderTargetUsage.PreserveContents);
         _blur2 = new RenderTarget2D(GraphicsDevice, width / 2, height / 2, false, pp.BackBufferFormat, DepthFormat.None, 1, RenderTargetUsage.PreserveContents);
