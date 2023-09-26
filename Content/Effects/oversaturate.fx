@@ -69,8 +69,8 @@ PixelToFrame ExtractPS(FlatToPixel PSIn)
 	
     float4 c = tex2D(TextureSampler, PSIn.texCoord);
 	float scale = max(max(c.r, c.g), c.b);
-	if (scale > 0.8) {
-    	Output.Color = (scale - 0.8) / 2;
+	if (scale > 1.0) {
+    	Output.Color = (scale - 1.0) / 2;
 	}
     Output.Color.a = 1;
 	return Output;

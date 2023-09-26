@@ -13,7 +13,7 @@ public class Oversaturator : DrawableGameComponent
     private EffectParameter _textureParam, _translateParam, _scaleParam, _highlightParam, _blurParam;
     private Vector2 _screenSizeRecip;
     private int _primaryDisplay;
-    private Texture2D _unused;
+    // private Texture2D _unused;
 
     private bool _debugging;
 
