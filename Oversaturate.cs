@@ -46,7 +46,7 @@ public class Oversaturator : DrawableGameComponent
         _renderTarget = new RenderTarget2D(GraphicsDevice, width, height, false,
                                                    SurfaceFormat.HdrBlendable, DepthFormat.None, 1,
                                                    RenderTargetUsage.DiscardContents);
-        _unused = new Texture2D(GraphicsDevice, 64, 64);
+        // _unused = new Texture2D(GraphicsDevice, 64, 64);
         _highlights = new RenderTarget2D(GraphicsDevice, width, height, false, pp.BackBufferFormat, DepthFormat.None, 1, RenderTargetUsage.PreserveContents);
         _blur1 = new RenderTarget2D(GraphicsDevice, width / 2, height / 2, false, pp.BackBufferFormat, DepthFormat.None, 1, RenderTargetUsage.PreserveContents);
         _blur2 = new RenderTarget2D(GraphicsDevice, width / 2, height / 2, false, pp.BackBufferFormat, DepthFormat.None, 1, RenderTargetUsage.PreserveContents);

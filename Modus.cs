@@ -14,6 +14,7 @@ public class Modus : Game
     private Squares _squares;
 
     private Spirals _spirals;
+    private Linearts _linearts;
     private Palette _bigRainbow, _smallRainbow;
     private int _complexity; // palette depth and # of line segments
     private Random _rng;
@@ -38,10 +39,13 @@ public class Modus : Game
         _bigRainbow = new Palette(_complexity / 2);
         _smallRainbow = new Palette(1);
         _spirals = new Spirals(this, 3, _complexity, 0.005f, 6, 4, _bigRainbow);
-        Components.Add(_spirals);
+        // Components.Add(_spirals);
 
         _squares = new Squares(this, 60, _bigRainbow);
         Components.Add(_squares);
+
+        _linearts = new Linearts(this, 3, 36, .005f, 1, 1, _bigRainbow);
+        Components.Add(_linearts);
 
         _oversaturator = new Oversaturator(this);
         Components.Add(_oversaturator);
@@ -110,6 +114,10 @@ public class Modus : Game
         if (kb.IsKeyDown(Keys.D4) && !_prevKB.IsKeyDown(Keys.D4))
         {
             _oversaturator.SetPrimary(4);
+        }
+        if (kb.IsKeyDown(Keys.N) && !_prevKB.IsKeyDown(Keys.N))
+        {
+            _linearts.advance();
         }
         _prevKB = kb;
         if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || kb.IsKeyDown(Keys.Escape))

@@ -199,7 +199,7 @@ class Polyline
             int vx = i * 6;
             Vector2 next = Points[i + 1];
             Color nextColor = _palette.Lookup(Colors[i + 1]);
-            nextColor.A = (byte)(Alphas[i] * 255);
+            nextColor.A = (byte)(Alphas[i + 1] * 255);
             float dx = next.X - prev.X;
             float dy = next.Y - prev.Y;
             float theta = (float)Math.Atan2(dx, dy);

@@ -87,7 +87,9 @@ PixelToFrame BlurXPS(FlatToPixel PSIn)
 	float4 cp3 = tex2D(TextureSampler, PSIn.texCoord + float2(3, 0) * xScale);
     float4 cp2 = tex2D(TextureSampler, PSIn.texCoord + float2(2, 0) * xScale);
     float4 cp1 = tex2D(TextureSampler, PSIn.texCoord + float2(1, 0) * xScale);
-    Output.Color = ((cm3 + cp3) * 0.0625 + (cm2 + cp2) * 0.125 + (cm1 + cp1) * 0.25 + cZ * 0.3) / 2;
+    float4 c = ((cm3 + cp3) * 0.0625 + (cm2 + cp2) * 0.125 + (cm1 + cp1) * 0.25 + cZ * 0.3) / 2;
+	float scale = max(max(c.r, c.g), max(c.b, 1));
+	Output.Color = c / scale;
     Output.Color.a = 1;
 	return Output;
 }
@@ -117,7 +119,7 @@ PixelToFrame CombinePS(FlatToPixel PSIn)
     base /= scale;
     float4 highlight = tex2D(HighlightSampler, PSIn.texCoord);
     float4 blur = tex2D(BlurSampler, PSIn.texCoord);
-    float grey = highlight.r / 3;
+    float grey = highlight.r / 6;
     blur *= 1 - saturate(base);
     Output.Color = base + grey + blur;
     return Output;
