@@ -232,7 +232,7 @@ class Polyline
             v[vx + 4].Position = new Vector3(prev.X - hx, prev.Y - hy, 0);
             v[vx + 5].Position = new Vector3(next.X - hx, next.Y - hy, 0);
 
-            bool left = Vector2.Dot(prevDelta, delta) > 0;
+            bool left = ((prevDelta.X * delta.Y) - (prevDelta.Y * delta.X)) > 0;
             // all of this might seem weirdly backwards; why are we using
             // hy with x, and hx with y? the answer is that hx/hy are the
             // *normal* vector, with nx = -y and ny = x, scaled to unit
