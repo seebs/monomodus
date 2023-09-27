@@ -15,7 +15,8 @@ public class Modus : Game
 
     private Spirals _spirals;
     private Linearts _linearts;
-    private Palette _bigRainbow, _smallRainbow;
+    private Fractals _fractals;
+    private Palette _bigRainbow, _medRainbow, _smallRainbow;
     private int _complexity; // palette depth and # of line segments
     private Random _rng;
 
@@ -38,14 +39,17 @@ public class Modus : Game
         _complexity = 400;
         _bigRainbow = new Palette(_complexity / 2);
         _smallRainbow = new Palette(1);
+        _medRainbow = new Palette(4);
         _spirals = new Spirals(this, 3, _complexity, 0.005f, 6, 4, _bigRainbow);
         // Components.Add(_spirals);
 
         _squares = new Squares(this, 60, _bigRainbow);
         Components.Add(_squares);
 
-        _linearts = new Linearts(this, 3, 36, .005f, 1, 1, _bigRainbow);
-        Components.Add(_linearts);
+        // _linearts = new Linearts(this, 3, 36, .005f, 1, 1, _bigRainbow);
+        // Components.Add(_linearts);
+        _fractals = new Fractals(this, 10, 4, 0.0025f, 1, 1, _medRainbow);
+        Components.Add(_fractals);
 
         _oversaturator = new Oversaturator(this);
         Components.Add(_oversaturator);

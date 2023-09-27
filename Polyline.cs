@@ -186,7 +186,7 @@ class Polyline
         {
             float dx = Points[1].X - Points[0].X;
             float dy = Points[1].Y - Points[0].Y;
-            prevTheta = (float)Math.Atan2(dx, dy);
+            prevTheta = (float)Math.Atan2(dy, dx);
         }
         Vector2 prev = Points[0];
         Color prevColor = _palette.Lookup(Colors[0]);
@@ -202,7 +202,7 @@ class Polyline
             nextColor.A = (byte)(Alphas[i + 1] * 255);
             float dx = next.X - prev.X;
             float dy = next.Y - prev.Y;
-            float theta = (float)Math.Atan2(dx, dy);
+            float theta = (float)Math.Atan2(dy, dx);
 
             float l2 = (dx * dx) + (dy * dy);
             v[vx + 0].Color = prevColor;

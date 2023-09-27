@@ -96,7 +96,7 @@ class Spiral
             }
             return;
         }
-        double baseTheta = Math.Atan2((double)dx, (double)dy);
+        double baseTheta = Math.Atan2((double)dy, (double)dx);
         double fullRadius = Math.Sqrt((double)(dx * dx + dy * dy));
         double partRadius = fullRadius / (double)l;
         int color = Color;
