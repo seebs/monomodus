@@ -45,7 +45,7 @@ class Fractal
     private Fractal _parent;
     private Polyline _base;
     private Palette _palette;
-    private Polyline _polyline;
+    private Fastline _line;
     private int _points;
     private Modus _game;
 
@@ -55,7 +55,7 @@ class Fractal
         _palette = palette;
         _parent = parent;
         _points = points;
-        _polyline = new Polyline(game, _points, thickness, trails, trailFrames, _palette);
+        _line = new Fastline(game, _points, thickness, trails, trailFrames, _palette);
     }
 
     public void SetBase(Polyline b)
@@ -85,10 +85,10 @@ class Fractal
             yScale = 1.0f;
             xScale = (float)screenHeight / (float)screenWidth;
         }
-        _polyline.LoadContent(gd);
+        _line.LoadContent(gd);
         for (int i = 0; i < _points; i++)
         {
-            _polyline.Alphas[i] = 1.0f;
+            _line.Alphas[i] = 1.0f;
         }
     }
     public void Update(GameTime gameTime)
@@ -98,16 +98,16 @@ class Fractal
         {
             // ... except we can still ask our line to
             // render itself
-            _polyline.Update(gameTime);
+            _line.Update(gameTime);
             return;
         }
-        Vector2[] ppoints = _parent._polyline.Points;
-        int[] pcolors = _parent._polyline.Colors;
+        Vector2[] ppoints = _parent._line.Points;
+        int[] pcolors = _parent._line.Colors;
         Vector2 prev = ppoints[0];
         int l = _parent._points;
         int n = 0;
-        _polyline.Points[n] = Vector2.Zero;
-        _polyline.Colors[n] = pcolors[0] + _base.Colors[0];
+        _line.Points[n] = Vector2.Zero;
+        _line.Colors[n] = pcolors[0] + _base.Colors[0];
         n++;
         for (int i = 1; i < l; i++)
         {
@@ -132,28 +132,26 @@ class Fractal
                 Vector2 p = _base.Points[j];
                 float x = (afA * p.X) + (afB * p.Y) + afC;
                 float y = (afD * p.X) + (afE * p.Y) + afF;
-                _polyline.Points[n] = new Vector2(x, y);
-                _polyline.Colors[n] = pcolor + _base.Colors[j];
+                _line.Points[n] = new Vector2(x, y);
+                _line.Colors[n] = pcolor + _base.Colors[j];
                 n++;
             }
             prev = next;
         }
-        _polyline.Update(gameTime);
+        _line.Update(gameTime);
     }
 
     public void Draw(GameTime gameTime, GraphicsDevice gd)
     {
-        _polyline.Draw(gameTime, gd);
+        _line.Draw(gameTime, gd);
     }
 
     public void Reset()
     {
-        _polyline.Points[0] = new Vector2(0, 0);
-        _polyline.Points[1] = new Vector2(1, 0);
-        _polyline.Colors[0] = 1;
-        _polyline.Colors[1] = 1;
-        _polyline.Alphas[0] = 1;
-        _polyline.Alphas[1] = 1;
+        _line.Points[0] = new Vector2(0, 0);
+        _line.Points[1] = new Vector2(1, 0);
+        _line.Colors[0] = 1;
+        _line.Colors[1] = 1;
     }
 }
 
@@ -186,6 +184,7 @@ class Fractals : DrawableGameComponent
             _fractals[i] = new Fractal(game, prev, perLine, thickness, trails, trailFrames, _palette);
             prev = _fractals[i];
             perLine = ((perLine - 1) * multiplier) + 1;
+            thickness *= 0.9f;
         }
     }
 
