@@ -115,15 +115,15 @@ class Fractal
             int pcolor = pcolors[i];
             Vector2 delta = next - prev;
             float len = delta.Length();
-            double theta = Math.Atan2((double)delta.Y, (double)delta.X);
-            double s, c;
-            (s, c) = Math.SinCos(theta);
+            float s, c;
+            s = delta.Y / len;
+            c = delta.X / len;
             float afA, afB, afC, afD, afE, afF;
             // A B C
             // D E F
-            afA = len * (float)c;
-            afD = len * (float)s;
-            afB = len * (float)-s;
+            afA = len * c;
+            afD = len * s;
+            afB = len * -s;
             afE = afA;
             afC = prev.X;
             afF = prev.Y;

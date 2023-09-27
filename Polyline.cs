@@ -182,36 +182,29 @@ class Polyline
 
     public void Update(GameTime gameTime)
     {
-        float prevTheta;
-        {
-            float dx = Points[1].X - Points[0].X;
-            float dy = Points[1].Y - Points[0].Y;
-            prevTheta = (float)Math.Atan2(dy, dx);
-        }
         Vector2 prev = Points[0];
         Color prevColor = _palette.Lookup(Colors[0]);
         prevColor.A = (byte)(Alphas[0] * 255);
         float prevHx = 0, prevHy = 0;
         // shorter name
         VertexPositionColor[] v = _vertices;
+        Vector2 prevDelta = Points[1] - Points[0];
         for (int i = 0; i < _segments; i++)
         {
             int vx = i * 6;
             Vector2 next = Points[i + 1];
             Color nextColor = _palette.Lookup(Colors[i + 1]);
             nextColor.A = (byte)(Alphas[i + 1] * 255);
-            float dx = next.X - prev.X;
-            float dy = next.Y - prev.Y;
-            float theta = (float)Math.Atan2(dy, dx);
+            Vector2 delta = next - prev;
 
-            float l2 = (dx * dx) + (dy * dy);
+
             v[vx + 0].Color = prevColor;
             v[vx + 1].Color = nextColor;
             v[vx + 2].Color = prevColor;
             v[vx + 3].Color = nextColor;
             v[vx + 4].Color = prevColor;
             v[vx + 5].Color = nextColor;
-            if (l2 == 0)
+            if (next == prev)
             {
                 v[vx + 0].Position = new Vector3(prev, 0);
                 v[vx + 1].Position = new Vector3(prev, 0);
@@ -221,12 +214,12 @@ class Polyline
                 v[vx + 5].Position = new Vector3(prev, 0);
                 prev = next;
                 prevColor = nextColor;
-                prevTheta = theta;
+                prevDelta = delta;
                 continue;
             }
-            float l = (float)Math.Sqrt(l2);
-            float nx = -dy / l;
-            float ny = dx / l;
+            float l = delta.Length();
+            float nx = -delta.Y / l;
+            float ny = delta.X / l;
             float hx = nx * _thicknessHalf;
             float hy = ny * _thicknessHalf;
             // P2 +--------+ P3
@@ -239,19 +232,7 @@ class Polyline
             v[vx + 4].Position = new Vector3(prev.X - hx, prev.Y - hy, 0);
             v[vx + 5].Position = new Vector3(next.X - hx, next.Y - hy, 0);
 
-            float dt = theta - prevTheta;
-            if (dt < 0)
-            {
-                dt += (float)Math.Tau;
-            }
-            bool left = false;
-            if (dt > (float)Math.PI)
-            {
-                left = true;
-                dt -= (float)Math.PI;
-            }
-            float sharp = (float)(Math.PI / 2 - (Math.Abs(dt - (Math.PI / 2))));
-            float scale = (float)(Math.Tan(sharp / 2));
+            bool left = Vector2.Dot(prevDelta, delta) > 0;
             // all of this might seem weirdly backwards; why are we using
             // hy with x, and hx with y? the answer is that hx/hy are the
             // *normal* vector, with nx = -y and ny = x, scaled to unit
@@ -259,39 +240,18 @@ class Polyline
             // move things along the *original* vector.
             if (left)
             {
-                // we're bending "left". we want
-                // to adjust our P2, and the previous entry's
-                // P3, to be a point between where they'd
-                // have been...
-                if (vx > 0)
-                {
-                    v[vx - 3].Position.X -= prevHy * scale;
-                    v[vx - 3].Position.Y += prevHx * scale;
-                }
-                v[vx + 2].Position.X += hy * scale;
-                v[vx + 2].Position.Y -= hx * scale;
-            }
-            else if (dt < Math.PI)
-            {
-                // we're bending "right", so we want to
-                // adjust our P4, and the previous entry's
-                // P5.
-                if (vx > 0)
-                {
-                    v[vx - 1].Position.X -= prevHy * scale;
-                    v[vx - 1].Position.Y += prevHx * scale;
-                }
-                v[vx + 4].Position.X += hy * scale;
-                v[vx + 4].Position.Y -= hx * scale;
+                // point vx-3 and vx+2 at the intersection of
+                // the edges they were on...
             }
             else
             {
-                // we're not bending, so we can just ignore that.
+                // point vx-1 and vx+4 at the intersection of
+                // the edges they were on...
             }
 
             prev = next;
             prevColor = nextColor;
-            prevTheta = theta;
+            prevDelta = delta;
             prevHx = hx;
             prevHy = hy;
         }

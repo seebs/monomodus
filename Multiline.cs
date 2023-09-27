@@ -141,7 +141,6 @@ class Multiline
             prevColor.A = (byte)(Alphas[i + 0] * 255);
             float dx = next.X - prev.X;
             float dy = next.Y - prev.Y;
-            float theta = (float)Math.Atan2(dy, dx);
 
             float l2 = (dx * dx) + (dy * dy);
             v[vx + 0].Color = prevColor;
