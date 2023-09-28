@@ -41,15 +41,15 @@ public class Modus : Game
         _smallRainbow = new Palette(1);
         _medRainbow = new Palette(4);
         _spirals = new Spirals(this, 3, _complexity, 0.005f, 6, 4, _bigRainbow);
-        // Components.Add(_spirals);
+        Components.Add(_spirals);
 
         _squares = new Squares(this, 60, _bigRainbow);
         Components.Add(_squares);
 
         // _linearts = new Linearts(this, 3, 36, .005f, 1, 1, _bigRainbow);
         // Components.Add(_linearts);
-        _fractals = new Fractals(this, 12, 4, 0.005f, 1, 1, _medRainbow);
-        Components.Add(_fractals);
+        // _fractals = new Fractals(this, 10, 4, 0.005f, 1, 1, _medRainbow);
+        // Components.Add(_fractals);
 
         _oversaturator = new Oversaturator(this);
         Components.Add(_oversaturator);
