@@ -221,18 +221,18 @@ class Fractals : DrawableGameComponent
         _base = new Polyline(_game, _points, 0.1f, 1, 1, _palette);
         _base.LoadContent(GraphicsDevice);
         _base.Points[0] = new Vector2(0f, 0f);
-        _base.Colors[0] = 4;
+        _base.Colors[0] = 1;
         _base.Points[1] = new Vector2(0.03f, 0.15f);
-        _base.Colors[1] = 1;
+        _base.Colors[1] = 2;
         _base.Points[2] = new Vector2(0.97f, -0.15f);
-        _base.Colors[2] = 1;
+        _base.Colors[2] = 2;
         // for (int i = 1; i < _points - 1; i++)
         // {
         //     _base.Points[i] = new Vector2((float)i / (float)_points, (float)_rng.NextDouble() / 3);
         //     _base.Colors[i] = 1;
         // }
         _base.Points[_points - 1] = new Vector2(1f, 0f);
-        _base.Colors[_points - 1] = 8;
+        _base.Colors[_points - 1] = 1;
 
         for (int i = 0; i < _depth; i++)
         {
@@ -260,7 +260,7 @@ class Fractals : DrawableGameComponent
     public override void Draw(GameTime gameTime)
     {
         // skip 0 (it's just a line, it's boring)
-        for (int i = 9; i < _depth; i++)
+        for (int i = 1; i < _depth; i++)
         {
             _fractals[i].Draw(gameTime, GraphicsDevice);
         }
