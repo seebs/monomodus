@@ -264,7 +264,7 @@ class Fractals : DrawableGameComponent
     public override void Draw(GameTime gameTime)
     {
         // skip 0 (it's just a line, it's boring)
-        for (int i = 1; i < _depth; i++)
+        for (int i = 9; i < _depth; i++)
         {
             _fractals[i].Draw(gameTime, GraphicsDevice);
         }

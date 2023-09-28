@@ -117,41 +117,48 @@ class Fastline
         ColorCoordinated[] v = _vertices;
         Vector2 prev = Points[0];
         Vector2 prevColor = new Vector2((float)Colors[0], Alphas[0]);
+        int vx = 0;
         for (int i = 1; i < _points; i++)
         {
-            int vx = (i - 1) * 4;
             Vector2 next = Points[i];
             Vector2 nextColor = new Vector2((float)Colors[i], Alphas[i]);
             Vector2 delta = next - prev;
-            float l = delta.Length();
+            float l = _thicknessHalf / delta.Length();
 
-            v[vx + 0].ColorCoord = prevColor;
-            v[vx + 1].ColorCoord = nextColor;
-            v[vx + 2].ColorCoord = prevColor;
-            v[vx + 3].ColorCoord = nextColor;
+
             if (l == 0)
             {
+                // set positions, but not colors, because the degenerate positions
+                // mean the colors don't matter
                 v[vx + 0].Position = prev;
                 v[vx + 1].Position = prev;
+
                 v[vx + 2].Position = prev;
+
                 v[vx + 3].Position = prev;
+
+                vx += 4;
                 continue;
             }
-            float nx = -delta.Y / l;
-            float ny = delta.X / l;
-            float hx = nx * _thicknessHalf;
-            float hy = ny * _thicknessHalf;
+            Vector2 h = new Vector2(-delta.Y * l, delta.X * l);
+
             //   P0  +--------+ P1
             // [old] +--------+ [new]
             //   P2  +--------+ P3
-            v[vx + 0].Position = new Vector2(prev.X + hx, prev.Y + hy);
-            v[vx + 1].Position = new Vector2(next.X + hx, next.Y + hy);
-            v[vx + 2].Position = new Vector2(prev.X - hx, prev.Y - hy);
-            v[vx + 3].Position = new Vector2(next.X - hx, next.Y - hy);
+            v[vx + 0].Position = prev + h;
+            v[vx + 0].ColorCoord = prevColor;
+            v[vx + 1].Position = next + h;
+            v[vx + 1].ColorCoord = nextColor;
+            v[vx + 2].Position = prev - h;
+            v[vx + 2].ColorCoord = prevColor;
+            v[vx + 3].Position = next - h;
+            v[vx + 3].ColorCoord = nextColor;
+
             prev = next;
             prevColor = nextColor;
+            vx += 4;
         }
-        _vertexBuffers[_trailIndex % _trails].SetData(_vertices, 0, _totalVertices, SetDataOptions.Discard);
+        _vertexBuffers[_trailIndex % _trails].SetData(_vertices, 0, _totalVertices, SetDataOptions.None);
         _trailIndex++;
         // we never reuse 0.._trails because those can tell
         // us we've not yet initialized all the trails
