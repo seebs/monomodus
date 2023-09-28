@@ -13,7 +13,7 @@ class Fastline
 {
     private ColorCoordinated[] _vertices;
     private int _trailIndex;
-    private VertexBuffer[] _vertexBuffers;
+    private DynamicVertexBuffer[] _vertexBuffers;
     private IndexBuffer _indexBuffer;
     private Effect _effect;
     private int[] _indices;
@@ -103,10 +103,10 @@ class Fastline
 
         _indexBuffer = new IndexBuffer(gd, IndexElementSize.ThirtyTwoBits, _totalIndices, BufferUsage.WriteOnly);
         _indexBuffer.SetData(_indices);
-        _vertexBuffers = new VertexBuffer[_trails];
+        _vertexBuffers = new DynamicVertexBuffer[_trails];
         for (int i = 0; i < _trails; i++)
         {
-            _vertexBuffers[i] = new VertexBuffer(gd, ColorCoordinated.VertexDeclaration, _totalVertices, BufferUsage.WriteOnly);
+            _vertexBuffers[i] = new DynamicVertexBuffer(gd, ColorCoordinated.VertexDeclaration, _totalVertices, BufferUsage.WriteOnly);
         }
         _viewAdapted = Matrix.CreateScale(xScale, yScale, 1f);
     }
@@ -151,7 +151,7 @@ class Fastline
             prev = next;
             prevColor = nextColor;
         }
-        _vertexBuffers[_trailIndex % _trails].SetData(_vertices);
+        _vertexBuffers[_trailIndex % _trails].SetData(_vertices, 0, _totalVertices, SetDataOptions.Discard);
         _trailIndex++;
         // we never reuse 0.._trails because those can tell
         // us we've not yet initialized all the trails
