@@ -114,17 +114,13 @@ class Fractal
             Vector2 next = ppoints[i];
             int pcolor = pcolors[i];
             Vector2 delta = next - prev;
-            float len = delta.Length();
-            float s, c;
-            s = delta.Y / len;
-            c = delta.X / len;
             float afA, afB, afC, afD, afE, afF;
             // A B C
             // D E F
-            afA = len * c;
-            afD = len * s;
-            afB = len * -s;
-            afE = afA;
+            afA = delta.X;
+            afD = delta.Y;
+            afB = -delta.Y;
+            afE = delta.X;
             afC = prev.X;
             afF = prev.Y;
             for (int j = 1; j < _base.Points.Length; j++)
