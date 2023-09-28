@@ -116,12 +116,12 @@ class Fastline
         // shorter name
         ColorCoordinated[] v = _vertices;
         Vector2 prev = Points[0];
-        Vector2 prevColor = new Vector2((float)Colors[0] / (float)_palette.Size(), Alphas[0]);
+        Vector2 prevColor = new Vector2((float)Colors[0], Alphas[0]);
         for (int i = 1; i < _points; i++)
         {
             int vx = (i - 1) * 4;
             Vector2 next = Points[i];
-            Vector2 nextColor = new Vector2((float)Colors[i] / (float)_palette.Size(), Alphas[i]);
+            Vector2 nextColor = new Vector2((float)Colors[i], Alphas[i]);
             Vector2 delta = next - prev;
             float l = delta.Length();
 
@@ -166,6 +166,7 @@ class Fastline
         _effect.CurrentTechnique = _effect.Techniques["Flat"];
         _effect.Parameters["xTranslate"].SetValue(_viewAdapted);
         EffectParameter alphaParam = _effect.Parameters["xAlpha"];
+        _effect.Parameters["xPaletteSize"].SetValue((float)_palette.Size());
         gd.BlendState = BlendState.Additive;
         // same index buffer for everything
         gd.Indices = _indexBuffer;

@@ -16,7 +16,7 @@ struct Square
 
 class Squares : DrawableGameComponent
 {
-    private Texture2D _squareTx, _paletteTx;
+    private Texture2D _squareTx;
 
     private ColorCoordinatedTx[] _vertices;
     private Effect _effect;
@@ -173,7 +173,7 @@ class Squares : DrawableGameComponent
             float cos = (float)cosD;
             float cornerX = (cos * offset) - (sin * offset);
             float cornerY = (cos * offset) + (sin * offset);
-            Vector2 c = new Vector2((float)s.Color / (float)_palette.Size(), s.Alpha);
+            Vector2 c = new Vector2(s.Color, s.Alpha);
             _vertices[vertex + 0].ColorCoord = c;
             _vertices[vertex + 1].ColorCoord = c;
             _vertices[vertex + 2].ColorCoord = c;
@@ -191,6 +191,7 @@ class Squares : DrawableGameComponent
         _effect.Parameters["xTexture"].SetValue(_squareTx);
         _effect.Parameters["xTranslate"].SetValue(_viewAdapted);
         _effect.Parameters["xAlpha"].SetValue(1.0f);
+        _effect.Parameters["xPaletteSize"].SetValue((float)_palette.Size());
         foreach (EffectPass pass in _effect.CurrentTechnique.Passes)
         {
             pass.Apply();

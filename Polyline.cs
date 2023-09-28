@@ -186,7 +186,7 @@ class Polyline
     {
         Vector2 prev = Points[0];
         Vector2 prevColor;
-        prevColor.X = (float)Colors[0] / (float)_palette.Size();
+        prevColor.X = (float)Colors[0];
         prevColor.Y = Alphas[0];
         float prevHx = 0, prevHy = 0;
         // shorter name
@@ -197,7 +197,7 @@ class Polyline
             int vx = i * 6;
             Vector2 next = Points[i + 1];
             Vector2 nextColor;
-            nextColor.X = (float)Colors[i + 1] / (float)_palette.Size();
+            nextColor.X = (float)Colors[i + 1];
             nextColor.Y = Alphas[i + 1];
             Vector2 delta = next - prev;
 
@@ -273,6 +273,7 @@ class Polyline
     {
         _effect.CurrentTechnique = _effect.Techniques["Flat"];
         _effect.Parameters["xTranslate"].SetValue(_viewAdapted);
+        _effect.Parameters["xPaletteSize"].SetValue((float)_palette.Size());
         EffectParameter alphaParam = _effect.Parameters["xAlpha"];
         gd.BlendState = BlendState.Additive;
         // same index buffer for everything
