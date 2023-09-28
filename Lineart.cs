@@ -296,10 +296,6 @@ class Linearts : DrawableGameComponent
             _linearts[i].P2 = _grid[r, c];
             (r, c) = gridIndex(p3);
             _linearts[i].NewTarget(_grid[r, c]);
-            if (_linearts[i].P1 == _linearts[i].P2 || _linearts[i].P1 == _linearts[i].P3 || _linearts[i].P2 == _linearts[i].P3)
-            {
-                p3++;
-            }
             _linearts[i].Color = (i * _palette.Size()) / _count;
             _linearts[i].LoadContent(GraphicsDevice);
             _linearts[i].MoveBoth = (i % 2) == 0;
@@ -345,7 +341,6 @@ class Linearts : DrawableGameComponent
                         }
                         if (p3 == -1)
                         {
-                            p3 = 0;
                             break;
                         }
                     }
@@ -353,10 +348,6 @@ class Linearts : DrawableGameComponent
 
                 (r, c) = gridIndex(p3);
                 _linearts[i].NewTarget(_grid[r, c]);
-                if (_linearts[i].P1 == _linearts[i].P2 || _linearts[i].P1 == _linearts[i].P3 || _linearts[i].P2 == _linearts[i].P3)
-                {
-                    p3++;
-                }
                 // _advance = false;
             }
             // and then we stutter from redrawing the 0th line, which should be
