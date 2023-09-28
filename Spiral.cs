@@ -162,6 +162,11 @@ class Spiral
     {
         _polyline.Draw(gameTime, gd);
     }
+
+    public void LoadTextures(GraphicsDevice gd)
+    {
+        _polyline.LoadTextures(gd);
+    }
 }
 
 class Spirals : DrawableGameComponent
@@ -242,6 +247,14 @@ class Spirals : DrawableGameComponent
         for (int i = 0; i < _count; i++)
         {
             _spirals[i].Draw(gameTime, GraphicsDevice);
+        }
+    }
+
+    public void LoadTextures(GraphicsDevice gd)
+    {
+        for (int i = 0; i < _count; i++)
+        {
+            _spirals[i].LoadTextures(gd);
         }
     }
 }

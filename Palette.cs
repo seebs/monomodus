@@ -12,6 +12,21 @@ class Palette
         new Color(180, 0, 200),
         new Color(240, 0, 0),
     };
+
+    public static Color[] RBColors = {
+                new Color(240, 0, 0, 0),
+        new Color(240, 100, 0, 0),
+        new Color(220, 220, 0, 0),
+        new Color(0, 200, 0, 0),
+        new Color(0, 0, 255, 0),
+        new Color(180, 0, 200, 0),
+                new Color(240, 0, 0, 255),
+        new Color(240, 100, 0, 255),
+        new Color(220, 220, 0, 255),
+        new Color(0, 200, 0, 255),
+        new Color(0, 0, 255, 255),
+        new Color(180, 0, 200, 255),
+    };
     private Color[] _colors;
     public Palette(int shades)
     {

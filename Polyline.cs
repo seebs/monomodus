@@ -55,7 +55,7 @@ namespace MonoModus;
 
 class Polyline
 {
-    private VertexPositionColor[] _vertices;
+    private ColorCoordinated[] _vertices;
     private int _trailIndex;
     private VertexBuffer[] _vertexBuffers;
     private IndexBuffer _indexBuffer;
@@ -68,17 +68,18 @@ class Polyline
     private float _thickness;
     private float _thicknessHalf;
     private Matrix _viewAdapted;
-    private Modus _game;
+    private Modus _modus;
 
     public int[] Colors;
     public Vector2[] Points;
     private Palette _palette;
     public float[] Alphas;
+    private Texture2D _paletteTx;
 
 
     public Polyline(Modus game, int points, float thickness, int trails, int trailFrames, Palette palette)
     {
-        _game = game;
+        _modus = game;
         _points = points;
         _segments = _points - 1;
         _thickness = thickness;
@@ -119,7 +120,7 @@ class Polyline
         _totalVertices = 6 * _segments;
         _totalIndices = 18 * _segments;
         _totalTriangles = 6 * _segments;
-        _vertices = new VertexPositionColor[_totalVertices];
+        _vertices = new ColorCoordinated[_totalVertices];
         _indices = new int[_totalIndices];
 
         for (int i = 0; i < _points; i++)
@@ -171,47 +172,50 @@ class Polyline
         _vertexBuffers = new VertexBuffer[_trails];
         for (int i = 0; i < _trails; i++)
         {
-            _vertexBuffers[i] = new VertexBuffer(gd, VertexPositionColor.VertexDeclaration, _totalVertices, BufferUsage.WriteOnly);
+            _vertexBuffers[i] = new VertexBuffer(gd, ColorCoordinated.VertexDeclaration, _totalVertices, BufferUsage.WriteOnly);
         }
         _viewAdapted = Matrix.CreateScale(xScale, yScale, 1f);
+    }
 
-        _effect = _game.Content.Load<Effect>("Effects/effects");
-        _effect.CurrentTechnique = _effect.Techniques["Flat"];
-        _effect.Parameters["xTranslate"].SetValue(_viewAdapted);
+    public void LoadTextures(GraphicsDevice gd)
+    {
+        _effect = _modus.Effect;
     }
 
     public void Update(GameTime gameTime)
     {
         Vector2 prev = Points[0];
-        Color prevColor = _palette.Lookup(Colors[0]);
-        prevColor.A = (byte)(Alphas[0] * 255);
+        Vector2 prevColor;
+        prevColor.X = (float)Colors[0] / (float)_palette.Size();
+        prevColor.Y = Alphas[0];
         float prevHx = 0, prevHy = 0;
         // shorter name
-        VertexPositionColor[] v = _vertices;
+        ColorCoordinated[] v = _vertices;
         Vector2 prevDelta = Points[1] - Points[0];
         for (int i = 0; i < _segments; i++)
         {
             int vx = i * 6;
             Vector2 next = Points[i + 1];
-            Color nextColor = _palette.Lookup(Colors[i + 1]);
-            nextColor.A = (byte)(Alphas[i + 1] * 255);
+            Vector2 nextColor;
+            nextColor.X = (float)Colors[i + 1] / (float)_palette.Size();
+            nextColor.Y = Alphas[i + 1];
             Vector2 delta = next - prev;
 
 
-            v[vx + 0].Color = prevColor;
-            v[vx + 1].Color = nextColor;
-            v[vx + 2].Color = prevColor;
-            v[vx + 3].Color = nextColor;
-            v[vx + 4].Color = prevColor;
-            v[vx + 5].Color = nextColor;
+            v[vx + 0].ColorCoord = prevColor;
+            v[vx + 1].ColorCoord = nextColor;
+            v[vx + 2].ColorCoord = prevColor;
+            v[vx + 3].ColorCoord = nextColor;
+            v[vx + 4].ColorCoord = prevColor;
+            v[vx + 5].ColorCoord = nextColor;
             if (next == prev)
             {
-                v[vx + 0].Position = new Vector3(prev, 0);
-                v[vx + 1].Position = new Vector3(prev, 0);
-                v[vx + 2].Position = new Vector3(prev, 0);
-                v[vx + 3].Position = new Vector3(prev, 0);
-                v[vx + 4].Position = new Vector3(prev, 0);
-                v[vx + 5].Position = new Vector3(prev, 0);
+                v[vx + 0].Position = prev;
+                v[vx + 1].Position = prev;
+                v[vx + 2].Position = prev;
+                v[vx + 3].Position = prev;
+                v[vx + 4].Position = prev;
+                v[vx + 5].Position = prev;
                 prev = next;
                 prevColor = nextColor;
                 prevDelta = delta;
@@ -225,12 +229,12 @@ class Polyline
             // P2 +--------+ P3
             // P0 +--------+ P1
             // P4 +--------+ P5
-            v[vx + 0].Position = new Vector3(prev, 0);
-            v[vx + 1].Position = new Vector3(next, 0);
-            v[vx + 2].Position = new Vector3(prev.X + hx, prev.Y + hy, 0);
-            v[vx + 3].Position = new Vector3(next.X + hx, next.Y + hy, 0);
-            v[vx + 4].Position = new Vector3(prev.X - hx, prev.Y - hy, 0);
-            v[vx + 5].Position = new Vector3(next.X - hx, next.Y - hy, 0);
+            v[vx + 0].Position = prev;
+            v[vx + 1].Position = next;
+            v[vx + 2].Position = new Vector2(prev.X + hx, prev.Y + hy);
+            v[vx + 3].Position = new Vector2(next.X + hx, next.Y + hy);
+            v[vx + 4].Position = new Vector2(prev.X - hx, prev.Y - hy);
+            v[vx + 5].Position = new Vector2(next.X - hx, next.Y - hy);
 
             bool left = ((prevDelta.X * delta.Y) - (prevDelta.Y * delta.X)) > 0;
             // all of this might seem weirdly backwards; why are we using

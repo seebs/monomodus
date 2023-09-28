@@ -16,9 +16,9 @@ struct Square
 
 class Squares : DrawableGameComponent
 {
-    private Texture2D _squareTx;
+    private Texture2D _squareTx, _paletteTx;
 
-    private VertexPositionColorTexture[] _vertices;
+    private ColorCoordinatedTx[] _vertices;
     private Effect _effect;
     private IndexBuffer _indexBuffer;
     private VertexBuffer _vertexBuffer;
@@ -31,14 +31,14 @@ class Squares : DrawableGameComponent
     private float _squareHalf;
     private Matrix _viewAdapted;
     private Palette _palette;
-    private Modus _game;
+    private Modus _modus;
 
     public Square[,] S;
 
     public Squares(Modus game, int scale, Palette palette)
             : base(game)
     {
-        _game = game;
+        _modus = game;
         _scale = scale;
         _palette = palette;
     }
@@ -116,7 +116,7 @@ class Squares : DrawableGameComponent
         _yOffset /= (smaller / 2);
         _squareHalf = (float)_squareSize / 2;
 
-        _vertices = new VertexPositionColorTexture[_totalVertices];
+        _vertices = new ColorCoordinatedTx[_totalVertices];
         _indices = new int[_totalIndices];
         for (int i = 0; i < _totalSquares; i++)
         {
@@ -129,10 +129,10 @@ class Squares : DrawableGameComponent
             S[row, col].Scale = 1.0f;
             S[row, col].Rotation = 0f;
             S[row, col].Offset = new Vector2(0f, 0f);
-            _vertices[vertex + 0].TextureCoordinate = new Vector2(0f, 0f);
-            _vertices[vertex + 1].TextureCoordinate = new Vector2(1f, 0f);
-            _vertices[vertex + 2].TextureCoordinate = new Vector2(0f, 1f);
-            _vertices[vertex + 3].TextureCoordinate = new Vector2(1f, 1f);
+            _vertices[vertex + 0].TxCoord = new Vector2(0f, 0f);
+            _vertices[vertex + 1].TxCoord = new Vector2(1f, 0f);
+            _vertices[vertex + 2].TxCoord = new Vector2(0f, 1f);
+            _vertices[vertex + 3].TxCoord = new Vector2(1f, 1f);
             _indices[index + 0] = (vertex + 0);
             _indices[index + 1] = (vertex + 1);
             _indices[index + 2] = (vertex + 2);
@@ -142,13 +142,13 @@ class Squares : DrawableGameComponent
         }
         _indexBuffer = new IndexBuffer(GraphicsDevice, IndexElementSize.ThirtyTwoBits, _totalIndices, BufferUsage.WriteOnly);
         _indexBuffer.SetData(_indices);
-        _vertexBuffer = new VertexBuffer(GraphicsDevice, VertexPositionColorTexture.VertexDeclaration, _totalVertices, BufferUsage.WriteOnly);
+        _vertexBuffer = new VertexBuffer(GraphicsDevice, ColorCoordinatedTx.VertexDeclaration, _totalVertices, BufferUsage.WriteOnly);
         _viewAdapted = Matrix.CreateScale(xScale, yScale, 1.0f);
-        _effect = Game.Content.Load<Effect>("Effects/effects");
     }
 
-    public void LoadTextures()
+    public void LoadTextures(GraphicsDevice gd)
     {
+        _effect = _modus.Effect;
         _squareTx = Game.Content.Load<Texture2D>("Textures/square");
     }
 
@@ -173,16 +173,15 @@ class Squares : DrawableGameComponent
             float cos = (float)cosD;
             float cornerX = (cos * offset) - (sin * offset);
             float cornerY = (cos * offset) + (sin * offset);
-            Color c = _palette.Lookup(s.Color);
-            c.A = (byte)(s.Alpha * 255);
-            _vertices[vertex + 0].Color = c;
-            _vertices[vertex + 1].Color = c;
-            _vertices[vertex + 2].Color = c;
-            _vertices[vertex + 3].Color = c;
-            _vertices[vertex + 0].Position = new Vector3(centerX - cornerX, centerY - cornerY, 0f);
-            _vertices[vertex + 1].Position = new Vector3(centerX - cornerY, centerY + cornerX, 0f);
-            _vertices[vertex + 2].Position = new Vector3(centerX + cornerY, centerY - cornerX, 0f);
-            _vertices[vertex + 3].Position = new Vector3(centerX + cornerX, centerY + cornerY, 0f);
+            Vector2 c = new Vector2((float)s.Color / (float)_palette.Size(), s.Alpha);
+            _vertices[vertex + 0].ColorCoord = c;
+            _vertices[vertex + 1].ColorCoord = c;
+            _vertices[vertex + 2].ColorCoord = c;
+            _vertices[vertex + 3].ColorCoord = c;
+            _vertices[vertex + 0].Position = new Vector2(centerX - cornerX, centerY - cornerY);
+            _vertices[vertex + 1].Position = new Vector2(centerX - cornerY, centerY + cornerX);
+            _vertices[vertex + 2].Position = new Vector2(centerX + cornerY, centerY - cornerX);
+            _vertices[vertex + 3].Position = new Vector2(centerX + cornerX, centerY + cornerY);
         }
     }
 

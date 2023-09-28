@@ -19,6 +19,9 @@ public class Modus : Game
     private Palette _bigRainbow, _medRainbow, _smallRainbow;
     private int _complexity; // palette depth and # of line segments
     private Random _rng;
+    private Effect _effect;
+    public Effect Effect { get => _effect; }
+    private Texture2D _paletteTx;
 
     private Oversaturator _oversaturator;
 
@@ -31,7 +34,6 @@ public class Modus : Game
         _graphics.PreferredBackBufferWidth = 1200;  // set this value to the desired width of your window
         _graphics.PreferredBackBufferHeight = 900;   // set this value to the desired height of your window
         _graphics.ApplyChanges();
-
 
         _rng = new Random();
         Content.RootDirectory = "Content";
@@ -80,7 +82,7 @@ public class Modus : Game
         {
             for (int col = 0; col < _squares.S.GetLength(1); col++)
             {
-                _squares.S[row, col].Alpha = 0;
+                _squares.S[row, col].Alpha = 0f;
             }
         }
     }
@@ -88,7 +90,14 @@ public class Modus : Game
     protected override void LoadContent()
     {
         _oversaturator.Debug(false);
-        _squares.LoadTextures();
+        // create a single global color/ effect which we can use
+        // from everywhere
+        _effect = Content.Load<Effect>("Effects/color");
+        _paletteTx = new Texture2D(GraphicsDevice, 6, 2);
+        _paletteTx.SetData(Palette.RBColors);
+        _effect.Parameters["xPalette"].SetValue(_paletteTx);
+        _squares.LoadTextures(GraphicsDevice);
+        _spirals.LoadTextures(GraphicsDevice);
     }
 
     protected override void Update(GameTime gameTime)
