@@ -162,9 +162,9 @@ class Fastline
         _trailIndex++;
         // we never reuse 0.._trails because those can tell
         // us we've not yet initialized all the trails
-        if (_trailIndex > (_trails * 2))
+        if (_trailIndex > 1)
         {
-            _trailIndex -= _trails;
+            _trailIndex = 0;
         }
     }
 
@@ -177,25 +177,18 @@ class Fastline
         gd.BlendState = BlendState.Additive;
         // same index buffer for everything
         gd.Indices = _indexBuffer;
-        // we maintain three times as many trails as we're drawing, and draw only
-        // every third one.
-        for (int i = _trailFrames - 1; i < _trails; i += _trailFrames)
+
+        int idx = 1 - _trailIndex;
+        if (idx >= 0)
         {
-            int idx = _trailIndex - _trails + i;
-            if (idx < 0)
-            {
-                continue;
-            }
-            float alpha = (float)Math.Sqrt((double)((float)(i + 1) / (float)_trails));
-            alphaParam.SetValue(alpha);
-            foreach (EffectPass pass in _effect.CurrentTechnique.Passes)
-            {
-                pass.Apply();
-            }
-            gd.SetVertexBuffer(_vertexBuffers[idx % _trails]);
+            alphaParam.SetValue(1.0f);
+            _effect.CurrentTechnique.Passes[0].Apply();
+            gd.SetVertexBuffer(_vertexBuffers[idx]);
             gd.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, _totalTriangles);
         }
+
     }
+
 
     public void LoadTextures(GraphicsDevice gd)
     {

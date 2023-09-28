@@ -4,3 +4,5 @@
 /Content/obj
 /dotnet_2*.nettrace
 /dotnet_2*.json
+/MonoMod*.nettrace
+/MonoMod*.json
