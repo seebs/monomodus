@@ -155,7 +155,7 @@ class Multiline
                 v[vx + 3].Position = new Vector3(prev, 0);
                 continue;
             }
-            float l = (float)Math.Sqrt(l2);
+            float l = MathF.Sqrt(l2);
             float nx = -dy / l;
             float ny = dx / l;
             float hx = nx * _thicknessHalf;

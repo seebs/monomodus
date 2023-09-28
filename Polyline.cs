@@ -287,7 +287,7 @@ class Polyline
             {
                 continue;
             }
-            float alpha = (float)Math.Sqrt((double)((float)(i + 1) / (float)_trails));
+            float alpha = MathF.Sqrt(((float)(i + 1) / (float)_trails));
             alphaParam.SetValue(alpha);
             foreach (EffectPass pass in _effect.CurrentTechnique.Passes)
             {

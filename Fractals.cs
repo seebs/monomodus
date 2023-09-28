@@ -245,12 +245,12 @@ class Fractals : DrawableGameComponent
     public override void Update(GameTime gameTime)
     {
         _theta += 0.02f;
-        double s, c;
-        (s, c) = Math.SinCos((double)_theta);
-        _base.Points[1].X = 0.03f + (float)c * .05f;
-        _base.Points[1].Y = 0.15f + (float)s * .05f;
-        _base.Points[2].X = 0.97f + (float)c * .05f;
-        _base.Points[2].Y = -0.15f + (float)s * .05f;
+        float s, c;
+        (s, c) = MathF.SinCos(_theta);
+        _base.Points[1].X = 0.03f + c * .05f;
+        _base.Points[1].Y = 0.15f + s * .05f;
+        _base.Points[2].X = 0.97f + c * .05f;
+        _base.Points[2].Y = -0.15f + s * .05f;
         for (int i = 1; i < _depth; i++)
         {
             _fractals[i].Update(gameTime);

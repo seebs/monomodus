@@ -83,7 +83,7 @@ class Spiral
                 --i;
             }
         }
-        double thetaPerSegment = (Math.PI * 4) / (double)l;
+        float thetaPerSegment = (MathF.PI * 4) / l;
         Color = (Color + 1) % _palette.Size();
         float dx = Target.X - Center.X;
         float dy = Target.Y - Center.Y;
@@ -96,34 +96,34 @@ class Spiral
             }
             return;
         }
-        double baseTheta = Math.Atan2((double)dy, (double)dx);
-        double fullRadius = Math.Sqrt((double)(dx * dx + dy * dy));
-        double partRadius = fullRadius / (double)l;
+        float baseTheta = MathF.Atan2(dy, dx);
+        float fullRadius = MathF.Sqrt(dx * dx + dy * dy);
+        float partRadius = fullRadius / l;
         int color = Color;
-        double theta = baseTheta;
+        float theta = baseTheta;
         for (int i = l - 1; i >= 0; i--)
         {
-            (double sin, double cos) = Math.SinCos(theta);
-            double r = partRadius * i;
-            double rippled = r * (double)(40 + ripples[i]) / (double)40;
+            (float sin, float cos) = MathF.SinCos(theta);
+            float r = partRadius * i;
+            float rippled = r * (float)(40 + ripples[i]) / (float)40;
             Vector2 prev = _polyline.Points[i];
             _polyline.Points[i].X = Center.X + (float)(cos * rippled);
             _polyline.Points[i].Y = Center.Y + (float)(sin * rippled);
             _polyline.Colors[i] = color + (ripples[i] * _points / 5);
             if (ripples[i] != 0)
             {
-                _game.Notice(_polyline.Points[i], _polyline.Points[i] - prev, (float)Math.Sqrt(r / fullRadius) * (float)Math.Abs((double)ripples[i]), _polyline.Colors[i]);
+                _game.Notice(_polyline.Points[i], _polyline.Points[i] - prev, MathF.Sqrt(r / fullRadius) * MathF.Abs((float)ripples[i]), _polyline.Colors[i]);
             }
             color = (color + 1) % _palette.Size();
             _polyline.Alphas[i] = 1.0f;
             if (r > 0)
             {
-                theta += (double)_spinny * thetaPerSegment * Math.Sqrt(fullRadius / r);
+                theta += _spinny * thetaPerSegment * MathF.Sqrt(fullRadius / r);
             }
         }
         Target += Velocity;
         bool bounced = false;
-        if ((float)Math.Abs((double)Target.X) > _bounds.X)
+        if (MathF.Abs(Target.X) > _bounds.X)
         {
             bounced = true;
             if (Target.X > 0)
@@ -136,7 +136,7 @@ class Spiral
             }
             Velocity.X *= -1;
         }
-        if ((float)Math.Abs((double)Target.Y) > _bounds.Y)
+        if (MathF.Abs(Target.Y) > _bounds.Y)
         {
             bounced = true;
             if (Target.Y > 0)
