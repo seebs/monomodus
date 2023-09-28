@@ -107,8 +107,8 @@ class Spiral
             double r = partRadius * i;
             double rippled = r * (double)(40 + ripples[i]) / (double)40;
             Vector2 prev = _polyline.Points[i];
-            _polyline.Points[i].X = Center.X + (float)(sin * rippled);
-            _polyline.Points[i].Y = Center.Y + (float)(cos * rippled);
+            _polyline.Points[i].X = Center.X + (float)(cos * rippled);
+            _polyline.Points[i].Y = Center.Y + (float)(sin * rippled);
             _polyline.Colors[i] = color + (ripples[i] * _points / 5);
             if (ripples[i] != 0)
             {
