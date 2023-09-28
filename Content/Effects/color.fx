@@ -39,8 +39,8 @@ float xAlpha; // global multiplier to apply to everything in this drawing path
 // so we want 0 to be 1/12, and the rightmost is 5/6-1, so we want the highest
 // value to be 11/12. but we're getting in integers scaled to an arbitrary
 // palette size, so if the palette size is 6, we want 0-5 to cover that, and
-// if it's 12, we want 0-11 to cover that, and so on. so we want 5 times color
-// divided by palette size, plus 1/12.... i think.
+// if it's 12, we want 0-11 to cover that, and so on. so we want 5 to come out to
+// 5/6 + 1/12, so color divided by palette size, plus 1/12.... i think.
 // if we're getting in an input color, we want to convert it into a 1-N range,
 float xPaletteSize;
 
@@ -50,7 +50,7 @@ TxToPixel TxVS( float2 inPos : POSITION, float2 inColor: TEXCOORD0, float2 inTex
 	TxToPixel Output = (TxToPixel)0;
 	float4 inPos4 = float4(inPos[0], inPos[1], 0, 1);
 	Output.Position = mul(inPos4, xTranslate);
-	Output.ColorCoords[0] = (inColor[0] * 5 / xPaletteSize) + (1.0 / 12.0);
+	Output.ColorCoords[0] = (inColor[0] / xPaletteSize) + (1.0 / 12.0);
 	Output.ColorCoords[1] = inColor[1] / 2 + 0.25;
 	Output.TextureCoords = inTexCoords;
     
@@ -71,7 +71,7 @@ FlatToPixel FlatVS(float2 inPos : POSITION, float2 inColor: TEXCOORD0)
 	FlatToPixel Output = (FlatToPixel)0;
 	float4 inPos4 = float4(inPos[0], inPos[1], 0, 1);
 	Output.Position = mul(inPos4, xTranslate);
-	Output.ColorCoords[0] = (inColor[0] * 5 / xPaletteSize) + (1.0 / 12.0);
+	Output.ColorCoords[0] = (inColor[0] / xPaletteSize) + (1.0 / 12.0);
 	Output.ColorCoords[1] = inColor[1] / 2 + 0.25;
     
 	return Output;    
