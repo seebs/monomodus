@@ -11,7 +11,7 @@ namespace MonoModus;
 
 class Fastline
 {
-    private VertexPositionColor[] _vertices;
+    private ColorCoordinated[] _vertices;
     private int _trailIndex;
     private VertexBuffer[] _vertexBuffers;
     private IndexBuffer _indexBuffer;
@@ -24,7 +24,7 @@ class Fastline
     private float _thickness;
     private float _thicknessHalf;
     private Matrix _viewAdapted;
-    private Modus _game;
+    private Modus _modus;
 
     public int[] Colors;
     public Vector2[] Points;
@@ -34,7 +34,7 @@ class Fastline
 
     public Fastline(Modus game, int points, float thickness, int trails, int trailFrames, Palette palette)
     {
-        _game = game;
+        _modus = game;
         _points = points;
         _segments = _points - 1;
         _thickness = thickness;
@@ -75,7 +75,7 @@ class Fastline
         _totalVertices = 4 * _segments;
         _totalIndices = 6 * _segments;
         _totalTriangles = 2 * _segments;
-        _vertices = new VertexPositionColor[_totalVertices];
+        _vertices = new ColorCoordinated[_totalVertices];
         _indices = new int[_totalIndices];
 
         for (int i = 0; i < _points; i++)
@@ -106,41 +106,35 @@ class Fastline
         _vertexBuffers = new VertexBuffer[_trails];
         for (int i = 0; i < _trails; i++)
         {
-            _vertexBuffers[i] = new VertexBuffer(gd, VertexPositionColor.VertexDeclaration, _totalVertices, BufferUsage.WriteOnly);
+            _vertexBuffers[i] = new VertexBuffer(gd, ColorCoordinated.VertexDeclaration, _totalVertices, BufferUsage.WriteOnly);
         }
         _viewAdapted = Matrix.CreateScale(xScale, yScale, 1f);
-
-        _effect = _game.Content.Load<Effect>("Effects/effects");
-        _effect.CurrentTechnique = _effect.Techniques["Flat"];
-        _effect.Parameters["xTranslate"].SetValue(_viewAdapted);
     }
 
     public void Update(GameTime gameTime)
     {
         // shorter name
-        VertexPositionColor[] v = _vertices;
+        ColorCoordinated[] v = _vertices;
         Vector2 prev = Points[0];
-        Color prevColor = _palette.Lookup(Colors[0]);
-        prevColor.A = (byte)(Alphas[0] * 255);
+        Vector2 prevColor = new Vector2((float)Colors[0] / (float)_palette.Size(), Alphas[0]);
         for (int i = 1; i < _points; i++)
         {
             int vx = (i - 1) * 4;
             Vector2 next = Points[i];
-            Color nextColor = _palette.Lookup(Colors[i]);
-            nextColor.A = (byte)(Alphas[i] * 255);
+            Vector2 nextColor = new Vector2((float)Colors[i] / (float)_palette.Size(), Alphas[i]);
             Vector2 delta = next - prev;
             float l = delta.Length();
 
-            v[vx + 0].Color = prevColor;
-            v[vx + 1].Color = nextColor;
-            v[vx + 2].Color = prevColor;
-            v[vx + 3].Color = nextColor;
+            v[vx + 0].ColorCoord = prevColor;
+            v[vx + 1].ColorCoord = nextColor;
+            v[vx + 2].ColorCoord = prevColor;
+            v[vx + 3].ColorCoord = nextColor;
             if (l == 0)
             {
-                v[vx + 0].Position = new Vector3(prev, 0);
-                v[vx + 1].Position = new Vector3(prev, 0);
-                v[vx + 2].Position = new Vector3(prev, 0);
-                v[vx + 3].Position = new Vector3(prev, 0);
+                v[vx + 0].Position = prev;
+                v[vx + 1].Position = prev;
+                v[vx + 2].Position = prev;
+                v[vx + 3].Position = prev;
                 continue;
             }
             float nx = -delta.Y / l;
@@ -150,10 +144,10 @@ class Fastline
             //   P0  +--------+ P1
             // [old] +--------+ [new]
             //   P2  +--------+ P3
-            v[vx + 0].Position = new Vector3(prev.X + hx, prev.Y + hy, 0);
-            v[vx + 1].Position = new Vector3(next.X + hx, next.Y + hy, 0);
-            v[vx + 2].Position = new Vector3(prev.X - hx, prev.Y - hy, 0);
-            v[vx + 3].Position = new Vector3(next.X - hx, next.Y - hy, 0);
+            v[vx + 0].Position = new Vector2(prev.X + hx, prev.Y + hy);
+            v[vx + 1].Position = new Vector2(next.X + hx, next.Y + hy);
+            v[vx + 2].Position = new Vector2(prev.X - hx, prev.Y - hy);
+            v[vx + 3].Position = new Vector2(next.X - hx, next.Y - hy);
             prev = next;
             prevColor = nextColor;
         }
@@ -193,5 +187,10 @@ class Fastline
             gd.SetVertexBuffer(_vertexBuffers[idx % _trails]);
             gd.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, _totalTriangles);
         }
+    }
+
+    public void LoadTextures(GraphicsDevice gd)
+    {
+        _effect = _modus.Effect;
     }
 }

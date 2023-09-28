@@ -153,6 +153,11 @@ class Fractal
         _line.Colors[0] = 1;
         _line.Colors[1] = 1;
     }
+
+    public void LoadTextures(GraphicsDevice gd)
+    {
+        _line.LoadTextures(gd);
+    }
 }
 
 class Fractals : DrawableGameComponent
@@ -262,6 +267,14 @@ class Fractals : DrawableGameComponent
         for (int i = 1; i < _depth; i++)
         {
             _fractals[i].Draw(gameTime, GraphicsDevice);
+        }
+    }
+
+    public void LoadTextures(GraphicsDevice gd)
+    {
+        for (int i = 0; i < _depth; i++)
+        {
+            _fractals[i].LoadTextures(gd);
         }
     }
 }

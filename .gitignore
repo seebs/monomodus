@@ -2,3 +2,5 @@
 /obj
 /Content/bin
 /Content/obj
+/dotnet_2*.nettrace
+/dotnet_2*.json
