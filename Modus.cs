@@ -50,7 +50,7 @@ public class Modus : Game
 
         // _linearts = new Linearts(this, 3, 36, .005f, 1, 1, _bigRainbow);
         // Components.Add(_linearts);
-        _fractals = new Fractals(this, 11, 4, 0.005f, 1, 2, _medRainbow);
+        _fractals = new Fractals(this, 10, 4, 0.005f, 1, 2, _medRainbow);
         Components.Add(_fractals);
 
         _oversaturator = new Oversaturator(this);

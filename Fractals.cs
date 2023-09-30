@@ -45,17 +45,17 @@ class Fractal
     private Fractal _parent;
     private Polyline _base;
     private Palette _palette;
-    private Fastline _line;
+    private Memory<Vector2> _linePoints;
+    private Memory<Vector2> _lineColors;
     private int _points;
     private Modus _game;
 
-    public Fractal(Modus game, Fractal parent, int points, float thickness, int trails, int trailFrames, Palette palette)
+    public Fractal(Modus game, Fractal parent, int points, Palette palette)
     {
         _game = game;
         _palette = palette;
         _parent = parent;
         _points = points;
-        _line = new Fastline(game, _points, thickness, trails, trailFrames, _palette);
     }
 
     public void SetBase(Polyline b)
@@ -63,56 +63,32 @@ class Fractal
         _base = b;
     }
 
-    public void LoadContent(GraphicsDevice gd)
+    public void LoadContent(Memory<Vector2> points, Memory<Vector2> colors)
     {
-        PresentationParameters pp = gd.PresentationParameters;
-
-        int screenWidth = pp.BackBufferWidth;
-        int screenHeight = pp.BackBufferHeight;
-        float xScale, yScale;
-
-        bool sideways = screenWidth < screenHeight;
-
-        // we do some initial math in pixels, to try to get a square size
-        // which is an integer number of pixels...
-        if (sideways)
-        {
-            xScale = 1.0f;
-            yScale = (float)screenWidth / (float)screenHeight;
-        }
-        else
-        {
-            yScale = 1.0f;
-            xScale = (float)screenHeight / (float)screenWidth;
-        }
-        _line.LoadContent(gd);
-        for (int i = 0; i < _points; i++)
-        {
-            _line.Alphas[i] = 1.0f;
-        }
+        _linePoints = points;
+        _lineColors = colors;
     }
     public void Update(GameTime gameTime)
     {
         // can only update relative to a parent
         if (_parent == null)
         {
-            // ... except we can still ask our line to
-            // render itself
-            _line.Update(gameTime);
             return;
         }
-        Vector2[] ppoints = _parent._line.Points;
-        int[] pcolors = _parent._line.Colors;
+        Span<Vector2> ppoints = _parent._linePoints.Span;
+        Span<Vector2> pcolors = _parent._lineColors.Span;
+        Span<Vector2> points = _linePoints.Span;
+        Span<Vector2> colors = _lineColors.Span;
         Vector2 prev = ppoints[0];
         int l = _parent._points;
         int n = 0;
-        _line.Points[n] = Vector2.Zero;
-        _line.Colors[n] = pcolors[0] + _base.Colors[0];
+        points[n] = Vector2.Zero;
+        colors[n].X = pcolors[0].X + (float)_base.Colors[0];
         n++;
         for (int i = 1; i < l; i++)
         {
             Vector2 next = ppoints[i];
-            int pcolor = pcolors[i];
+            float pcolor = pcolors[i].X;
             Vector2 delta = next - prev;
             float afA, afB, afC, afD, afE, afF;
             // A B C
@@ -128,31 +104,22 @@ class Fractal
                 Vector2 p = _base.Points[j];
                 float x = (afA * p.X) + (afB * p.Y) + afC;
                 float y = (afD * p.X) + (afE * p.Y) + afF;
-                _line.Points[n] = new Vector2(x, y);
-                _line.Colors[n] = pcolor + _base.Colors[j];
+                points[n] = new Vector2(x, y);
+                colors[n].X = pcolor + _base.Colors[j];
                 n++;
             }
             prev = next;
         }
-        _line.Update(gameTime);
-    }
-
-    public void Draw(GameTime gameTime, GraphicsDevice gd)
-    {
-        _line.Draw(gameTime, gd);
     }
 
     public void Reset()
     {
-        _line.Points[0] = new Vector2(0, 0);
-        _line.Points[1] = new Vector2(1, 0);
-        _line.Colors[0] = 1;
-        _line.Colors[1] = 1;
-    }
-
-    public void LoadTextures(GraphicsDevice gd)
-    {
-        _line.LoadTextures(gd);
+        Span<Vector2> points = _linePoints.Span;
+        Span<Vector2> colors = _lineColors.Span;
+        points[0] = new Vector2(0, 0);
+        points[1] = new Vector2(1, 0);
+        colors[0].X = 1;
+        colors[1].X = 1;
     }
 }
 
@@ -166,6 +133,7 @@ class Fractals : DrawableGameComponent
     private Polyline _base;
     private Modus _game;
     private float _theta;
+    private Fastline _line;
 
 
     public Fractals(Modus game, int depth, int points, float thickness, int trails, int trailFrames, Palette palette)
@@ -180,13 +148,18 @@ class Fractals : DrawableGameComponent
         int multiplier = _points - 1;
         int perLine = 2;
         Fractal prev = null;
+        int[] partialPoints = new int[_depth];
+        float[] thicknesses = new float[_depth];
         for (int i = 0; i < _depth; i++)
         {
-            _fractals[i] = new Fractal(game, prev, perLine, thickness, trails, trailFrames, _palette);
+            partialPoints[i] = perLine;
+            thicknesses[i] = thickness;
+            _fractals[i] = new Fractal(game, prev, perLine, _palette);
             prev = _fractals[i];
             perLine = ((perLine - 1) * multiplier) + 1;
             thickness *= 0.9f;
         }
+        _line = new Fastline(game, partialPoints, thicknesses, _palette);
     }
 
     protected override void LoadContent()
@@ -236,41 +209,39 @@ class Fractals : DrawableGameComponent
 
         for (int i = 0; i < _depth; i++)
         {
-            _fractals[i].LoadContent(GraphicsDevice);
+            Memory<Vector2> points = _line.PointRef(i);
+            Memory<Vector2> colors = _line.ColorRef(i);
+            _fractals[i].LoadContent(points, colors);
             _fractals[i].SetBase(_base);
         }
         _fractals[0].Reset();
+        _line.LoadContent(GraphicsDevice);
     }
 
     public override void Update(GameTime gameTime)
     {
-        _theta += 0.02f;
+        _theta += 0.01f;
         float s, c;
         (s, c) = MathF.SinCos(_theta);
-        _base.Points[1].X = 0.03f + c * .05f;
-        _base.Points[1].Y = 0.15f + s * .05f;
-        _base.Points[2].X = 0.97f + c * .05f;
-        _base.Points[2].Y = -0.15f + s * .05f;
+        _base.Points[1].X = 0.03f + c * .2f;
+        _base.Points[1].Y = 0.15f + s * .2f;
+        // _base.Points[2].X = 0.97f + c * .05f;
+        // _base.Points[2].Y = -0.15f + s * .05f;
         for (int i = 1; i < _depth; i++)
         {
             _fractals[i].Update(gameTime);
         }
+        _line.Update(gameTime, 1, _depth, true);
     }
 
     public override void Draw(GameTime gameTime)
     {
-        // skip 0 (it's just a line, it's boring)
-        for (int i = 1; i < _depth; i++)
-        {
-            _fractals[i].Draw(gameTime, GraphicsDevice);
-        }
+        _line.Draw(gameTime, GraphicsDevice);
     }
 
     public void LoadTextures(GraphicsDevice gd)
     {
-        for (int i = 0; i < _depth; i++)
-        {
-            _fractals[i].LoadTextures(gd);
-        }
+        // nothing to do here
+        _line.LoadContent(GraphicsDevice);
     }
 }
